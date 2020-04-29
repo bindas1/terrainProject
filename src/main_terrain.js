@@ -23,7 +23,7 @@ async function main() {
 
 	// The <canvas> (HTML element for drawing graphics) was created by REGL, lets take a handle to it.
 	const canvas_elem = document.getElementsByTagName('canvas')[0];
-
+	const debug_text = document.getElementById('debug-text');
 
 	let update_needed = true;
 
@@ -58,28 +58,28 @@ async function main() {
 	*/
 
 	// Start downloads in parallel
-	// const resources = {};
+	const resources = {};
 
-	// [
-	// 	"noise.frag",
-	// 	"display.vert",
+	[
+		"noise.frag",
+		"display.vert",
 
-	// 	"terrain.vert",
-	// 	"terrain.frag",
+		"terrain.vert",
+		"terrain.frag",
 
-	// 	"buffer_to_screen.vert",
-	// 	"buffer_to_screen.frag",
+		"buffer_to_screen.vert",
+		"buffer_to_screen.frag",
 
-	// ].forEach((shader_filename) => {
-	// 	resources[`shaders/${shader_filename}`] = load_text(`./src/shaders/${shader_filename}`);
-	// });
+	].forEach((shader_filename) => {
+		resources[`shaders/${shader_filename}`] = load_text(`./src/shaders/${shader_filename}`);
+	});
 
 	// Wait for all downloads to complete
-	// for (const key in resources) {
-	// 	if (resources.hasOwnProperty(key)) {
-	// 		resources[key] = await resources[key]
-	// 	}
-	// }
+	for (const key in resources) {
+		if (resources.hasOwnProperty(key)) {
+			resources[key] = await resources[key]
+		}
+	}
 
 
 	/*---------------------------------------------------------------
@@ -170,20 +170,20 @@ async function main() {
 		Actors
 	---------------------------------------------------------------*/
 
-	// const noise_textures = init_noise(regl, resources);
+	const noise_textures = init_noise(regl, resources);
 
-	// const texture_fbm = (() => {
-	// 	for(const t of noise_textures) {
-	// 		//if(t.name === 'FBM') {
-	// 		if(t.name === 'FBM_for_terrain') {
-	// 			return t;
-	// 		}
-	// 	}
-	// })();
+	const texture_fbm = (() => {
+		for(const t of noise_textures) {
+			//if(t.name === 'FBM') {
+			if(t.name === 'FBM_for_terrain') {
+				return t;
+			}
+		}
+	})();
 
-	// texture_fbm.draw_texture_to_buffer({width: 96, height: 96, mouse_offset: [-12.24, 8.15]});
+	texture_fbm.draw_texture_to_buffer({width: 96, height: 96, mouse_offset: [-12.24, 8.15]});
 
-	// const terrain_actor = init_terrain(regl, resources, texture_fbm.get_buffer());
+	const terrain_actor = init_terrain(regl, resources, texture_fbm.get_buffer());
 
 	/*
 		UI
@@ -198,7 +198,7 @@ async function main() {
 		cam_angle_y = -0.42;
 		cam_distance_factor = 1.0;
 		cam_target = [0, 0, 0];
-		
+
 		update_cam_transform();
 		update_needed = true;
 	}
@@ -213,8 +213,8 @@ async function main() {
 	const mat_projection = mat4.create();
 	const mat_view = mat4.create();
 
-	let light_position_world = [0.2, -0.3, 0.8, 1.0];
-	//let light_position_world = [1, -1, 1., 1.0];
+	// let light_position_world = [0, 0, 0, 1.0];
+	let light_position_world = [1, 1, 1., 1.0];
 
 	const light_position_cam = [0, 0, 0, 0];
 
@@ -243,15 +243,14 @@ async function main() {
 			// Set the whole image to black
 			regl.clear({color: [0.9, 0.9, 1., 1]});
 
-			//terrain_actor.draw(scene_info);
+			terrain_actor.draw(scene_info);
 		}
 
-// 		debug_text.textContent = `
-// Hello! Sim time is ${sim_time.toFixed(2)} s
-// Camera: angle_z ${(cam_angle_z / deg_to_rad).toFixed(1)}, angle_y ${(cam_angle_y / deg_to_rad).toFixed(1)}, distance ${(cam_distance_factor*cam_distance_base).toFixed(1)}
-// `;
+		// debug_text.textContent = `
+		// Hello! Sim time is ${sim_time.toFixed(2)} s
+		// Camera: angle_z ${(cam_angle_z / deg_to_rad).toFixed(1)}, angle_y ${(cam_angle_y / deg_to_rad).toFixed(1)}, distance ${(cam_distance_factor*cam_distance_base).toFixed(1)}
+		// `;
 	});
 }
 
 DOM_loaded_promise.then(main);
-
