@@ -58,28 +58,28 @@ async function main() {
 	*/
 
 	// Start downloads in parallel
-	const resources = {};
+	// const resources = {};
 
-	[
-		"noise.frag",
-		"display.vert",
+	// [
+	// 	"noise.frag",
+	// 	"display.vert",
 
-		"terrain.vert",
-		"terrain.frag",
+	// 	"terrain.vert",
+	// 	"terrain.frag",
 
-		"buffer_to_screen.vert",
-		"buffer_to_screen.frag",
+	// 	"buffer_to_screen.vert",
+	// 	"buffer_to_screen.frag",
 
-	].forEach((shader_filename) => {
-		resources[`shaders/${shader_filename}`] = load_text(`./src/shaders/${shader_filename}`);
-	});
+	// ].forEach((shader_filename) => {
+	// 	resources[`shaders/${shader_filename}`] = load_text(`./src/shaders/${shader_filename}`);
+	// });
 
 	// Wait for all downloads to complete
-	for (const key in resources) {
-		if (resources.hasOwnProperty(key)) {
-			resources[key] = await resources[key]
-		}
-	}
+	// for (const key in resources) {
+	// 	if (resources.hasOwnProperty(key)) {
+	// 		resources[key] = await resources[key]
+	// 	}
+	// }
 
 
 	/*---------------------------------------------------------------
@@ -170,20 +170,20 @@ async function main() {
 		Actors
 	---------------------------------------------------------------*/
 
-	const noise_textures = init_noise(regl, resources);
+	// const noise_textures = init_noise(regl, resources);
 
-	const texture_fbm = (() => {
-		for(const t of noise_textures) {
-			//if(t.name === 'FBM') {
-			if(t.name === 'FBM_for_terrain') {
-				return t;
-			}
-		}
-	})();
+	// const texture_fbm = (() => {
+	// 	for(const t of noise_textures) {
+	// 		//if(t.name === 'FBM') {
+	// 		if(t.name === 'FBM_for_terrain') {
+	// 			return t;
+	// 		}
+	// 	}
+	// })();
 
-	texture_fbm.draw_texture_to_buffer({width: 96, height: 96, mouse_offset: [-12.24, 8.15]});
+	// texture_fbm.draw_texture_to_buffer({width: 96, height: 96, mouse_offset: [-12.24, 8.15]});
 
-	const terrain_actor = init_terrain(regl, resources, texture_fbm.get_buffer());
+	// const terrain_actor = init_terrain(regl, resources, texture_fbm.get_buffer());
 
 	/*
 		UI
@@ -243,7 +243,7 @@ async function main() {
 			// Set the whole image to black
 			regl.clear({color: [0.9, 0.9, 1., 1]});
 
-			terrain_actor.draw(scene_info);
+			//terrain_actor.draw(scene_info);
 		}
 
 // 		debug_text.textContent = `
