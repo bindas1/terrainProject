@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<title>ICG 4.2: 3D Solar System</title>
+	<meta name="author" content="Krzysztof Lis">
+
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<script src="lib/gl-matrix_3.2.1/gl-matrix.js" defer="true"></script>
+<script src="lib/regl_1.3.13/regl.js" defer="true"></script> <!-- not minified, because we want shader error messages -->
+
+<script src="src/icg_web.js" defer="true"></script>
+<script src="src/icg_math.js" defer="true"></script>
+<script src="src/icg_mesh.js" defer="true"></script>
+<script src="src/icg_grid.js" defer="true"></script>
+
+<script src="src/main.js" defer="true"></script>
+
+<!-- <canvas id="plot"></canvas> -->
+<!-- regl will add its own full-screen canvas -->
+
+<div id="debug-overlay">
+	<p>
+	<!-- <a href="src/main.js">source</a>  -->
+	ICG Exercise 4.2: 3D transforms
+	⁙⁙ docs: 
+		<a href="https://github.com/regl-project/regl/blob/gh-pages/API.md">regl</a>,
+		<a href="http://glmatrix.net/docs/">gl-matrix</a>,
+		<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript">MDN</a>
+	⁙⁙ drag with mouse rotate
+	⁙⁙ scroll to zoom
+	⁙⁙ toggle grid <strong style="border:1px white solid; padding: 0 0.25em 0 0.25em;">g</strong>
+	</p>
+	<pre id="debug-text"></pre>
+</div>
+
+</body>
+</html>
