@@ -56,3 +56,18 @@ function mat4_matmul_many(out, ...operands) {
 	})
 	return out;
 }
+
+// Equivalent to vec4(v, w) in GLSL
+function vec4FromVec3(v, w) {
+	return vec4.fromValues(v[0], v[1], v[2], w);
+}
+
+// Truncate vec4 to vec3; equivalent to v.xyz in GLSL
+function vec3FromVec4(v) {
+	return vec3.fromValues(v[0], v[1], v[2]);
+}
+
+function transform3DPoint(M4, p3) {
+	return vec3FromVec4(vec4.transformMat4(vec4.create(), vec4FromVec3(p3, 1.0), M4));
+}
+

@@ -6,7 +6,7 @@
 	<meta http-equiv="content-type" content="text/html; charset=utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-	<title>ICG 4.2: 3D Solar System</title>
+	<title>ICG : Shadow Maps Viewer</title>
 	<meta name="author" content="Krzysztof Lis">
 
 	<link rel="stylesheet" href="style.css">
@@ -19,27 +19,31 @@
 <script src="src/icg_web.js" defer="true"></script>
 <script src="src/icg_math.js" defer="true"></script>
 <script src="src/icg_mesh.js" defer="true"></script>
-<script src="src/icg_grid.js" defer="true"></script>
 
-<script src="src/main.js" defer="true"></script>
+<script src="src/noise.js" defer="true"></script>
+<script src="src/terrain.js" defer="true"></script>
 
-<!-- <canvas id="plot"></canvas> -->
-<!-- regl will add its own full-screen canvas -->
+<script src="src/main_terrain.js" defer="true"></script>
 
 <div id="debug-overlay">
 	<p>
-	<!-- <a href="src/main.js">source</a>  -->
-	ICG Exercise 4.2: 3D transforms
-	⁙⁙ docs: 
+		<!-- <a href="src/main.js">source</a>  -->
+		ICG Exercise: Terrain
+		⁙⁙ docs:
 		<a href="https://github.com/regl-project/regl/blob/gh-pages/API.md">regl</a>,
 		<a href="http://glmatrix.net/docs/">gl-matrix</a>,
 		<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript">MDN</a>
-	⁙⁙ drag with mouse rotate
-	⁙⁙ scroll to zoom
-	⁙⁙ toggle grid <strong style="border:1px white solid; padding: 0 0.25em 0 0.25em;">g</strong>
+		⁙⁙ mouse: drag to rotate, shift+drag to move
+		⁙⁙ scroll to zoom
+		⁙⁙ show/hide <strong class="keyboard">z</strong>
 	</p>
+	<p id="view-options">
+		<span id="btn-preset-view" class="button">Preset view <strong class="keyboard">c</strong></span>
+	</p>
+	
 	<pre id="debug-text"></pre>
 </div>
 
 </body>
 </html>
+

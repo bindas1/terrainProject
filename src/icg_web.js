@@ -42,12 +42,71 @@ function load_image(img_url) {
 /*
 Downloads an image and converts it to a WebGL texture.
 We need to provide the regl instance which communicates with the GPU to put the texture in GPU memory.
+	tex_options = override construction options
+		https://github.com/regl-project/regl/blob/master/API.md#textures
 */
-async function load_texture(regl_instance, img_url) {
+async function load_texture(regl_instance, img_url, tex_options) {
 	const img = await load_image(img_url);
-	return regl_instance.texture({
+
+	return regl_instance.texture(Object.assign({
 		data: img,
-	})
+		// when sampling the texture, use linear interpolation not just the nearest pixel
+		mag: 'linear',
+		min: 'linear', 
+	}, tex_options))
+}
+
+async function load_text(url) {
+	try {
+		const response = await fetch(url);
+		const response_text = await response.text();
+		return response_text;
+	} catch (e) {
+		console.error('Failed to load text resource from', url, 'error:', e);
+		throw e;
+	}
+}
+
+async function load_mesh_obj(regl_instance, url, material_colors_by_name) {
+	const obj_data = await load_text(url);
+	const mesh_loaded_obj = new OBJ.Mesh(obj_data);
+
+	const faces_from_materials = [].concat(...mesh_loaded_obj.indicesPerMaterial);
+	
+	let vertex_colors = null;
+
+	if(material_colors_by_name) {
+		const material_colors_by_index = mesh_loaded_obj.materialNames.map((name) => {
+			let color = material_colors_by_name[name];
+			if (color === undefined) {
+				console.warn(`Missing color for material ${name} in mesh ${url}`);
+				color = [1., 0., 1.];
+			}
+			return color;
+		});
+
+		vertex_colors = [].concat(mesh_loaded_obj.vertexMaterialIndices.map((mat_idx) => material_colors_by_index[mat_idx]));
+		vertex_colors = regl_instance.buffer(vertex_colors);
+	}
+
+
+	// Transfer the data into GPU buffers
+	// It is not necessary to do so (regl can deal with normal arrays),
+	// but this way we make sure its transferred only once and not on every draw.
+	const mesh_with_our_names = {
+		vertex_positions: regl_instance.buffer(mesh_loaded_obj.vertices),
+		vertex_tex_coords: regl_instance.buffer(mesh_loaded_obj.textures),
+		vertex_normals: regl_instance.buffer(mesh_loaded_obj.vertexNormals),
+		
+		// https://github.com/regl-project/regl/blob/master/API.md#elements
+		faces: regl_instance.elements({data: faces_from_materials, type: 'uint16'}),
+		
+		vertex_color: vertex_colors,
+
+		lib_obj: mesh_loaded_obj,
+	};
+
+	return mesh_with_our_names;
 }
 
 /*
@@ -100,3 +159,4 @@ function register_keyboard_action(key, func) {
 	keyboard_actions[key] = handlers;
 	handlers.push(func);
 }
+
