@@ -5,6 +5,8 @@ const {mat2, mat4, mat3, vec4, vec3, vec2} = glMatrix;
 
 const deg_to_rad = Math.PI / 180;
 
+const mesh_uvsphere = icg_mesh_make_uv_sphere(10);
+
 async function main() {
 	/* const in JS means the variable will not be bound to a new value, but the value can be modified (if its an object or array)
 		https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const
@@ -58,7 +60,9 @@ async function main() {
 	*/
 
 	// Start downloads in parallel
-	const resources = {};
+	const resources = {
+		'sun': load_texture(regl, './textures/sun.jpg'),
+	};
 
 	[
 		"noise.frag",
@@ -70,6 +74,8 @@ async function main() {
 		"buffer_to_screen.vert",
 		"buffer_to_screen.frag",
 
+		"sphere.vert",
+		"sphere.frag",
 	].forEach((shader_filename) => {
 		resources[`shaders/${shader_filename}`] = load_text(`./src/shaders/${shader_filename}`);
 	});
@@ -81,6 +87,36 @@ async function main() {
 		}
 	}
 
+	/*---------------------------------------------------------------
+		GPU pipeline
+	---------------------------------------------------------------*/
+	// Define the GPU pipeline used to draw a sphere
+	const draw_sphere = regl({
+		// Vertex attributes
+		attributes: {
+			// 3 vertices with 2 coordinates each
+			position: mesh_uvsphere.vertex_positions,
+			tex_coord: mesh_uvsphere.vertex_tex_coords,
+		},
+		// Faces, as triplets of vertex indices
+		elements: mesh_uvsphere.faces,
+
+		// Uniforms: global data available to the shader
+		uniforms: {
+			mat_mvp: regl.prop('mat_mvp'),
+			texture_base_color: regl.prop('tex_base_color'),
+		},
+
+		// Vertex shader program
+		// Given vertex attributes, it calculates the position of the vertex on screen
+		// and intermediate data ("varying") passed on to the fragment shader
+		vert: resources['shaders/sphere.vert'],
+
+		// Fragment shader
+		// Calculates the color of each pixel covered by the mesh.
+		// The "varying" values are interpolated between the values given by the vertex shader on the vertices of the current triangle.
+		frag: resources['shaders/sphere.frag'],
+	});
 
 	/*---------------------------------------------------------------
 		Camera
@@ -207,11 +243,35 @@ async function main() {
 	document.getElementById('btn-preset-view').addEventListener('click', activate_preset_view);
 	register_keyboard_action('c', activate_preset_view);
 
+	function calculate_actor_to_world_transform(actor, translation) {
+		const mat_trans = mat4.fromTranslation(mat4.create(), translation)
+		const mat_scale = mat4.fromScaling(mat4.create(), [actor.size, actor.size, actor.size])
+		mat4_matmul_many(actor.mat_model_to_world, mat_trans, mat_scale);
+	}
+
+	const actors_by_name = {
+		sun: {
+			orbits: null,
+			texture: resources.sun,
+			size: 0.5,
+			rotation_speed: 0.1,
+		},
+	}
+
+	//keep this in case later we add more object to our world
+	const actors_list = [actors_by_name.sun]
+
+	for (const actor of actors_list) {
+		// initialize transform matrix
+		actor.mat_model_to_world = mat4.create();
+	}
+
 	/*---------------------------------------------------------------
 		Frame render
 	---------------------------------------------------------------*/
 	const mat_projection = mat4.create();
 	const mat_view = mat4.create();
+	const mat_mvp = mat4.create();
 
 	// let light_position_world = [0, 0, 0, 1.0];
 	let light_position_world = [1, 1, 1., 1.0];
@@ -219,6 +279,8 @@ async function main() {
 	const light_position_cam = [0, 0, 0, 0];
 
 	regl.frame((frame) => {
+		const sim_time = frame.time
+
 		if(update_needed) {
 			update_needed = false; // do this *before* running the drawing code so we don't keep updating if drawing throws an error.
 
@@ -244,12 +306,25 @@ async function main() {
 			regl.clear({color: [0.9, 0.9, 1., 1]});
 
 			terrain_actor.draw(scene_info);
+
+			for (const actor of actors_list) {
+				calculate_actor_to_world_transform(actor, light_position_world.slice(0,3));
+
+				mat4_matmul_many(mat_mvp, mat_projection, mat_world_to_cam, actor.mat_model_to_world)
+
+				draw_sphere({
+					mat_mvp: mat_mvp,
+					tex_base_color: actor.texture,
+				});
+				// for better performance we should collect these props and then draw them all together
+				// http://regl.party/api#batch-rendering
+			}
 		}
 
-		// debug_text.textContent = `
-		// Hello! Sim time is ${sim_time.toFixed(2)} s
-		// Camera: angle_z ${(cam_angle_z / deg_to_rad).toFixed(1)}, angle_y ${(cam_angle_y / deg_to_rad).toFixed(1)}, distance ${(cam_distance_factor*cam_distance_base).toFixed(1)}
-		// `;
+		debug_text.textContent = `
+		Hello! Sim time is ${sim_time.toFixed(2)} s
+		Camera: angle_z ${(cam_angle_z / deg_to_rad).toFixed(1)}, angle_y ${(cam_angle_y / deg_to_rad).toFixed(1)}, distance ${(cam_distance_factor*cam_distance_base).toFixed(1)}
+		`;
 	});
 }
 
