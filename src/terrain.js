@@ -67,7 +67,7 @@ function terrain_build_mesh(height_map) {
 				normals[idx] = [0, 0, 1];
 			}
 			//need to distribute gx,gy between [-0.5,0.5] i think unfortunately this doesnt seem to work ;(
-			vertices[idx] = [(gx/grid_width-0.5)*5 , (gy/grid_height-0.5)*5, elevation*2];
+			vertices[idx] = [(gx/grid_width-0.5)*100 , (gy/grid_height-0.5)*100, elevation*20];
 			//vertices[idx] = [gx ,gy, elevation];
 		}
 	}

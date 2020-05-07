@@ -6,6 +6,7 @@ varying vec3 v2f_normal; // normal vector in camera coordinates
 varying vec3 v2f_dir_to_light; // direction to light source
 varying vec3 v2f_dir_from_view; // viewing vector (from eye to vertex in view coordinates)
 varying float v2f_height;
+varying vec3 v2f_dir_from_view_not_normalized;
 
 uniform mat4 mat_mvp;
 uniform mat4 mat_model_view;
@@ -16,7 +17,7 @@ void main()
 {
     v2f_height = position.z;
     vec4 position_v4 = vec4(position, 1);
-    
+
     vec3 newNormal = normal;
 
     /** TODO 3.2:
@@ -38,6 +39,7 @@ void main()
     
     vec3 vector_view_to_posn = (mat_model_view * position_v4).xyz;
     
+    v2f_dir_from_view_not_normalized = vector_view_to_posn;
     v2f_dir_from_view = normalize(vector_view_to_posn);//v
     // direction to light source
     v2f_dir_to_light = normalize(light_position.rgb - vector_view_to_posn);
