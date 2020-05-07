@@ -138,7 +138,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 			mat_normals: regl.prop('mat_normals'),
 
 			light_position: regl.prop('light_position'),
-			shadow_cubemap:  shadow_cubemap,
+			shadow_cubemap: shadow_cubemap,
 		},
 		elements: terrain_mesh.faces,
 
@@ -146,7 +146,12 @@ function init_terrain(regl, resources, height_map_buffer) {
 		frag: resources['shaders/terrain.frag'],
 	});
 
-	const cube_camera_projection = mat4.ortho(mat4.create(), -1.0, 1.0, -1.0, 1.0, -10, 10)
+	let fovy = Math.PI /2
+	let aspect = 1.
+	let near = 0.1
+	let far = 100
+	const cube_camera_projection = mat4.perspective(mat4.create(), fovy, aspect, near, far);
+	// const cube_camera_projection = mat4.ortho(mat4.create(), -1.0, 1.0, -1.0, 1.0, -10, 10)
 
 	class TerrainActor {
 		constructor() {
@@ -196,6 +201,8 @@ function init_terrain(regl, resources, height_map_buffer) {
 
 			let good_info = dict[side_idx];
 
+			// const position_after_transform = vec3FromVec4(vec4.transformMat4(vec4.create(), light_position_cam, scene_view))
+
 			const position_after_transform = vec3FromVec4(light_position_cam)
 			let target_after_transform = vec3.add(vec3.create(), position_after_transform, good_info["target"])
 
@@ -226,11 +233,10 @@ function init_terrain(regl, resources, height_map_buffer) {
 					framebuffer: out_buffer,
 				});
 
-				const mat_model_view = mat4.multiply(
-					mat4.create(),
-					this.cube_camera_view(side_idx, scene_view, light_position_cam),
-					this.mat_model_to_world);
-				const mat_mvp = mat4_matmul_many(mat4.create(), cube_camera_projection, this.mat_model_view);
+				const mat_model_view = mat4.create();
+				mat4.multiply(mat_model_view, this.cube_camera_view(side_idx, scene_view, light_position_cam), this.mat_model_to_world);
+				const mat_mvp = mat4.create();
+				mat4_matmul_many(mat_mvp, cube_camera_projection, mat_model_view);
 
 				// Measure new distance map
 				pipeline_shadowmap_generation({
