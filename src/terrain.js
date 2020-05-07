@@ -100,6 +100,33 @@ function init_terrain(regl, resources, height_map_buffer) {
 
 	const terrain_mesh = terrain_build_mesh(new BufferData(regl, height_map_buffer));
 
+	// The shadow map buffer is shared by all the lights
+	const shadow_cubemap = regl.framebufferCube({ //TODO maybe change it to just framebuffer (remove the cube)
+		radius:      1024,
+		colorFormat: 'rgba', // GLES 2.0 doesn't support single channel textures : (
+		colorType:   'float',
+  })
+
+	const pipeline_shadowmap_generation = regl({
+		attributes: {
+			position: terrain_mesh.vertex_positions,
+		},
+		// Faces, as triplets of vertex indices
+		elements: terrain_mesh.faces,
+
+		// Uniforms: global data available to the shader
+		uniforms: {
+			mat_mvp:        regl.prop('mat_mvp'),
+			mat_model_view: regl.prop('mat_model_view'),
+		},
+
+		vert: resources.shader_shadowmap_gen_vert,
+		frag: resources.shader_shadowmap_gen_frag,
+
+		// Where the result gets written to:
+		framebuffer: regl.prop('out_buffer'),
+  });
+
 	const pipeline_draw_terrain = regl({
 		attributes: {
 			position: terrain_mesh.vertex_positions,
@@ -111,6 +138,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 			mat_normals: regl.prop('mat_normals'),
 
 			light_position: regl.prop('light_position'),
+			shadow_cubemap:  shadow_cubemap,
 		},
 		elements: terrain_mesh.faces,
 
@@ -118,6 +146,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 		frag: resources['shaders/terrain.frag'],
 	});
 
+	const cube_camera_projection = mat4.ortho(mat4.create(), -1.0, 1.0, -1.0, 1.0, -10, 10)
 
 	class TerrainActor {
 		constructor() {
@@ -127,7 +156,92 @@ function init_terrain(regl, resources, height_map_buffer) {
 			this.mat_model_to_world = mat4.create();
 		}
 
-		draw({mat_projection, mat_view, light_position_cam}) {
+		cube_camera_view(side_idx, scene_view, light_position_cam) {
+			/*
+			Todo 4.1.2 cube_camera_view:
+				Construct the camera matrices which look through one of the 6 cube faces
+				for a cube aligned with the eye coordinate axes.
+				These faces are indexed in the order: +x, -x, +y, -y, +z, -z.
+				So when `side_idx = 0`, we should return the +x camera matrix,
+				and when `side_idx = 5`, we should return the -z one.
+			 */
+
+			var dict = {
+
+						0: {
+							"target" : [1, 0, 0], // view target point
+							"up": [0, 1, 0], // up vector
+						},
+						1: {
+							"target" : [-1, 0, 0], // view target point
+							"up": [0, 1, 0], // up vector
+						},
+						2: {
+							"target" : [0, 1, 0], // view target point
+							"up": [0, 0, -1], // up vector
+						},
+						3: {
+							"target" : [0, -1, 0], // view target point
+							"up": [0, 0, 1], // up vector
+						},
+						4: {
+							"target" : [0, 0, 1], // view target point
+							"up": [0, 1, 0], // up vector
+						},
+						5: {
+							"target" : [0, 0, -1], // view target point
+							"up": [0, 1, 0], // up vector
+						},
+					}
+
+			let good_info = dict[side_idx];
+
+			const position_after_transform = vec3FromVec4(light_position_cam)
+			let target_after_transform = vec3.add(vec3.create(), position_after_transform, good_info["target"])
+
+			let look_at = mat4.lookAt(
+				mat4.create(),
+				position_after_transform, // light/camera position in eye coord
+				target_after_transform, // view eye point
+				good_info["up"], // up vector
+			);
+
+			return mat4_matmul_many(mat4.create(), look_at, scene_view)
+		}
+
+		get_cube_camera_projection() {
+			return cube_camera_projection;
+		}
+
+		render_shadowmap({mat_view, light_position_cam}) {
+			const scene_view = mat_view;
+
+			for(let side_idx = 0; side_idx < 6; side_idx ++) {
+				const out_buffer = shadow_cubemap.faces[side_idx];
+
+				// clear buffer, set distance to max
+				regl.clear({
+					color: [0, 0, 0, 1],
+					depth: 1,
+					framebuffer: out_buffer,
+				});
+
+				const mat_model_view = mat4.multiply(
+					mat4.create(),
+					this.cube_camera_view(side_idx, scene_view, light_position_cam),
+					this.mat_model_to_world);
+				const mat_mvp = mat4_matmul_many(mat4.create(), cube_camera_projection, this.mat_model_view);
+
+				// Measure new distance map
+				pipeline_shadowmap_generation({
+					mat_mvp: mat_mvp,
+					mat_model_view: mat_model_view,
+					out_buffer: out_buffer,
+				});
+			}
+		}
+
+		draw_phong_contribution({mat_projection, mat_view, light_position_cam}) {
 			mat4_matmul_many(this.mat_model_view, mat_view, this.mat_model_to_world);
 			mat4_matmul_many(this.mat_mvp, mat_projection, this.mat_model_view);
 
