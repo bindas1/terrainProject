@@ -49,7 +49,7 @@ void main()
 		material_color = terrain_color_water;
 		shininess = 8.0;
 	} else {
-		float weight = (height - terrain_water_level) * 2.;
+		float weight = (height - terrain_water_level);
     material_color = mix(terrain_color_grass, terrain_color_mountain, weight);
 	}
 
