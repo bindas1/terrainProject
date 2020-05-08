@@ -314,6 +314,7 @@ async function main() {
 			const scene_info = {
 				mat_view:        mat_view,
 				mat_projection:  mat_projection,
+				light_position_world: light_position_world,
 				light_position_cam: light_position_cam,
 			}
 

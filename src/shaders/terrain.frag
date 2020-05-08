@@ -1,14 +1,15 @@
 precision highp float;
 
-varying vec2 v2f_tex_coord;
+// varying vec2 v2f_tex_coord;
 varying vec3 v2f_position_view; // vertex position in eye (camera) coordinates
 varying vec3 v2f_normal; // normal vector in camera coordinates
 varying vec3 v2f_dir_to_light; // direction to light source
 varying vec3 v2f_dir_from_view; // viewing vector (from eye to vertex in view coordinates)
 varying float v2f_height;
+varying vec3 position_in_light_view; // vertex position in light coordinates
 
 uniform vec4 light_position; //in camera space coordinates already
-uniform samplerCube shadow_cubemap;
+uniform sampler2D shadowmap;
 
 const vec3  light_color = vec3(1.0, 0.941, 0.898);
 // Small perturbation to prevent "z-fighting" on the water on some machines...
@@ -67,11 +68,12 @@ void main()
 	vec3 v = -normalize(v2f_dir_from_view);
 
 	float dist_light_and_posn = length(v2f_dir_to_light);
-	float dist_light_and_first_posn_in_shadow_map = textureCube(shadow_cubemap, -l).r;
+	vec2 coord_to_get_shadowmap = position_in_light_view.xy;
+	float dist_light_and_first_posn_in_shadow_map = texture2D(shadowmap, coord_to_get_shadowmap).r;
 
 	//we use -l because from the light's perspective, this is basically the coordinate to find the shadow map
 
-	if (dist_light_and_posn < 1.01 * dist_light_and_first_posn_in_shadow_map) {
+	if (0. ==  dist_light_and_first_posn_in_shadow_map) {
 		if (dotNL > 0.0){
 			color += light_color * material_color * dotNL;
 			if (dot(v, r) > 0.0){

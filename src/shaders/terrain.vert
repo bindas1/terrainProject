@@ -7,9 +7,11 @@ varying vec3 v2f_normal; // normal vector in camera coordinates
 varying vec3 v2f_dir_to_light; // direction to light source
 varying vec3 v2f_dir_from_view; // viewing vector (from eye to vertex in view coordinates)
 varying float v2f_height;
+varying vec3 position_in_light_view; // vertex position in light coordinates
 
 uniform mat4 mat_mvp;
 uniform mat4 mat_model_view;
+uniform mat4 mat_model_view_light;
 uniform mat3 mat_normals; // mat3 not 4, because normals are only rotated and not translated
 
 uniform vec4 light_position; //in camera space coordinates already
@@ -35,6 +37,8 @@ void main()
         newNormal = normalize(vec3(-5.*cos(position_v4.x*500.),0., 1.));
     }
 
+    //position vertec in light coordinate
+    position_in_light_view = (mat_model_view_light * position_v4).xyz;
     // position vertex in camera coordiante
     v2f_position_view = (mat_model_view * position_v4).xyz;
     // direction view to position in cam coordinate

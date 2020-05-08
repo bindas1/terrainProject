@@ -101,7 +101,12 @@ function init_terrain(regl, resources, height_map_buffer) {
 	const terrain_mesh = terrain_build_mesh(new BufferData(regl, height_map_buffer));
 
 	// The shadow map buffer is shared by all the lights
-	const shadow_cubemap = regl.framebufferCube({ //TODO maybe change it to just framebuffer (remove the cube)
+	// const shadow_cubemap = regl.framebufferCube({ //TODO maybe change it to just framebuffer (remove the cube)
+	// 	radius:      1024,
+	// 	colorFormat: 'rgba', // GLES 2.0 doesn't support single channel textures : (
+	// 	colorType:   'float',
+	// })
+	const shadowmap = regl.framebuffer({ //TODO maybe change it to just framebuffer (remove the cube)
 		radius:      1024,
 		colorFormat: 'rgba', // GLES 2.0 doesn't support single channel textures : (
 		colorType:   'float',
@@ -135,10 +140,11 @@ function init_terrain(regl, resources, height_map_buffer) {
 		uniforms: {
 			mat_mvp: regl.prop('mat_mvp'),
 			mat_model_view: regl.prop('mat_model_view'),
+			mat_model_view_light: regl.prop('mat_model_view_light'),
 			mat_normals: regl.prop('mat_normals'),
 
 			light_position: regl.prop('light_position'),
-			shadow_cubemap: shadow_cubemap,
+			shadowmap: shadowmap,
 		},
 		elements: terrain_mesh.faces,
 
@@ -146,12 +152,12 @@ function init_terrain(regl, resources, height_map_buffer) {
 		frag: resources['shaders/terrain.frag'],
 	});
 
-	let fovy = Math.PI /2
-	let aspect = 1.
-	let near = 0.1
-	let far = 100
-	const cube_camera_projection = mat4.perspective(mat4.create(), fovy, aspect, near, far);
-	// const cube_camera_projection = mat4.ortho(mat4.create(), -1.0, 1.0, -1.0, 1.0, -10, 10)
+	// let fovy = Math.PI /2
+	// let aspect = 1.
+	// let near = 0.1
+	// let far = 100
+	// const cube_camera_projection = mat4.perspective(mat4.create(), fovy, aspect, near, far);
+	const light_projection = mat4.ortho(mat4.create(), -1.0, 1.0, -1.0, 1.0, 0.1, 100)
 
 	class TerrainActor {
 		constructor() {
@@ -161,7 +167,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 			this.mat_model_to_world = mat4.create();
 		}
 
-		cube_camera_view(side_idx, scene_view, light_position_cam) {
+		cube_camera_view(side_idx, mat_view, light_position_cam) {
 			/*
 			Todo 4.1.2 cube_camera_view:
 				Construct the camera matrices which look through one of the 6 cube faces
@@ -201,8 +207,6 @@ function init_terrain(regl, resources, height_map_buffer) {
 
 			let good_info = dict[side_idx];
 
-			// const position_after_transform = vec3FromVec4(vec4.transformMat4(vec4.create(), light_position_cam, scene_view))
-
 			const position_after_transform = vec3FromVec4(light_position_cam)
 			let target_after_transform = vec3.add(vec3.create(), position_after_transform, good_info["target"])
 
@@ -213,41 +217,56 @@ function init_terrain(regl, resources, height_map_buffer) {
 				good_info["up"], // up vector
 			);
 
-			return mat4_matmul_many(mat4.create(), look_at, scene_view)
+			return mat4_matmul_many(mat4.create(), look_at, mat_view)
 		}
 
-		get_cube_camera_projection() {
-			return cube_camera_projection;
+		render_shadowmap({mat_view, light_position_cam, light_position_world}) {
+			// for(let side_idx = 0; side_idx < 6; side_idx ++) {
+			// 	const out_buffer = shadow_cubemap.faces[side_idx];
+
+			// 	// clear buffer, set distance to max
+			// 	regl.clear({
+			// 		color: [0, 0, 0, 1],
+			// 		depth: 1,
+			// 		framebuffer: out_buffer,
+			// 	});
+
+			// 	const mat_model_view = mat4.create();
+			// 	mat4.multiply(mat_model_view, this.cube_camera_view(side_idx, mat_view, light_position_cam), this.mat_model_to_world);
+			// 	const mat_mvp = mat4.create();
+			// 	mat4_matmul_many(mat_mvp, cube_camera_projection, mat_model_view);
+
+			// 	// Measure new distance map
+			// 	pipeline_shadowmap_generation({
+			// 		mat_mvp: mat_mvp,
+			// 		mat_model_view: mat_model_view,
+			// 		out_buffer: out_buffer,
+			// 	});
+			// }
+
+			const out_buffer = shadowmap
+			// clear buffer, set distance to max
+			regl.clear({
+				color: [0, 0, 0, 1],
+				depth: 1,
+				framebuffer: out_buffer,
+			});
+
+			const mat_model_view = mat4.create();
+			const look_at = mat4.lookAt(mat4.create(), light_position_world, [0,0,0], [0,1,0])
+			mat4.multiply(mat_model_view, look_at, this.mat_model_to_world);
+			const mat_mvp = mat4.create();
+			mat4_matmul_many(mat_mvp, light_projection, mat_model_view);
+
+			// Measure new distance map
+			pipeline_shadowmap_generation({
+				mat_mvp: mat_mvp,
+				mat_model_view: mat_model_view,
+				out_buffer: out_buffer,
+			});
 		}
 
-		render_shadowmap({mat_view, light_position_cam}) {
-			const scene_view = mat_view;
-
-			for(let side_idx = 0; side_idx < 6; side_idx ++) {
-				const out_buffer = shadow_cubemap.faces[side_idx];
-
-				// clear buffer, set distance to max
-				regl.clear({
-					color: [0, 0, 0, 1],
-					depth: 1,
-					framebuffer: out_buffer,
-				});
-
-				const mat_model_view = mat4.create();
-				mat4.multiply(mat_model_view, this.cube_camera_view(side_idx, scene_view, light_position_cam), this.mat_model_to_world);
-				const mat_mvp = mat4.create();
-				mat4_matmul_many(mat_mvp, cube_camera_projection, mat_model_view);
-
-				// Measure new distance map
-				pipeline_shadowmap_generation({
-					mat_mvp: mat_mvp,
-					mat_model_view: mat_model_view,
-					out_buffer: out_buffer,
-				});
-			}
-		}
-
-		draw_phong_contribution({mat_projection, mat_view, light_position_cam}) {
+		draw_phong_contribution({mat_projection, mat_view, light_position_cam, light_position_world}) {
 			mat4_matmul_many(this.mat_model_view, mat_view, this.mat_model_to_world);
 			mat4_matmul_many(this.mat_mvp, mat_projection, this.mat_model_view);
 
@@ -255,9 +274,13 @@ function init_terrain(regl, resources, height_map_buffer) {
 			mat3.transpose(this.mat_normals, this.mat_normals);
 			mat3.invert(this.mat_normals, this.mat_normals);
 
+			const look_at = mat4.lookAt(mat4.create(), light_position_world, [0,0,0], [0,1,0]);
+			const mat_model_view_light = mat4.multiply(mat4.create(), look_at, this.mat_model_to_world);
+
 			pipeline_draw_terrain({
 				mat_mvp: this.mat_mvp,
 				mat_model_view: this.mat_model_view,
+				mat_model_view_light: mat_model_view_light,
 				mat_normals: this.mat_normals,
 
 				light_position: light_position_cam,
