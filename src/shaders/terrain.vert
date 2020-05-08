@@ -31,10 +31,11 @@ void main()
 
     // viewing vector (from camera to vertex in view coordinates), camera is at vec3(0, 0, 0) in cam coords
     if(position_v4.z <= -0.0312) {
-        //position_v4.z = sin(position_v4.x*1000.) * 0.01;
+        position_v4.z = cos(position_v4.x*5000.) * sin(position_v4.y * 1000.) * 0.3 - sin(position_v4.x*1000.) * sin(position_v4.y * 1600.) * 0.1;
+        newNormal = normalize(vec3(-1500.*sin(10000.*position_v4.x)*sin(1000.*position_v4.y) - 100. * sin(1600.*position_v4.y) * cos(1000.*position_v4.x),0., 1.));
         //position_v4 = vec4(vec3(position_v4.x, position_v4.y, 0.05 * tex_fbm_for_water(vec2(position_v4.x, position_v4.y))), position_v4.w);
-        position_v4.z = (sin(100.0 * position_v4.x) * cos(50.0 * position_v4.y) * 0.006);
-        newNormal = normalize(vec3(0.6*cos(100.*position_v4.x)*sin(50.*position_v4.y),0., 1.));
+        //position_v4.z = (cos(1600.0 * position_v4.x) * cos(800.0 * position_v4.y) * 0.024*5.);
+        //newNormal = normalize(vec3(5.*38.4*sin(1600.*position_v4.x)*cos(800.*position_v4.y),0., 1.));
     }
     
     vec3 vector_view_to_posn = (mat_model_view * position_v4).xyz;
