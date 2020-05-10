@@ -100,13 +100,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 
 	const terrain_mesh = terrain_build_mesh(new BufferData(regl, height_map_buffer));
 
-	// The shadow map buffer is shared by all the lights
-	// const shadow_cubemap = regl.framebufferCube({ //TODO maybe change it to just framebuffer (remove the cube)
-	// 	radius:      1024,
-	// 	colorFormat: 'rgba', // GLES 2.0 doesn't support single channel textures : (
-	// 	colorType:   'float',
-	// })
-	const shadowmap = regl.framebuffer({ //TODO maybe change it to just framebuffer (remove the cube)
+	const shadowmap = regl.framebuffer({
 		radius:      1024,
 		colorFormat: 'rgba', // GLES 2.0 doesn't support single channel textures : (
 		colorType:   'float',
