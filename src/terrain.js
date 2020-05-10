@@ -162,7 +162,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 			this.mat_model_to_world = mat4.create();
 		}
 
-		render_shadowmap({mat_view, light_position_cam, light_position_world}) {
+		render_shadowmap({light_position_world}) {
 			const out_buffer = shadowmap
 			// clear buffer, set distance to max
 			regl.clear({

@@ -223,19 +223,6 @@ async function main() {
 
 	const terrain_actor = init_terrain(regl, resources, texture_fbm.get_buffer());
 
-	// const lights = [
-	// 	new Light({
-	// 		update: (light, {sim_time}) => {
-	// 			light.position = [
-	// 				0.1,
-	// 				Math.sin(sim_time * 0.5) * 12,
-	// 				Math.cos(sim_time * 0.5) * 12,
-	// 			];
-	// 		},
-	// 		color: [1., 1., 1.],
-	// 		intensity: 10.,
-	// 	}),
-	// ]
 	/*
 		UI
 	*/
@@ -317,15 +304,6 @@ async function main() {
 				light_position_world: light_position_world,
 				light_position_cam: light_position_cam,
 			}
-
-			// const scene_info = {
-			// 	sim_time:        sim_time,
-			// 	mat_view:        active_mat_view, // can differ from mat_view for debugging!
-			// 	scene_mat_view:  mat_view,
-			// 	mat_projection:  active_mat_projection, // can differ from mat_projection for debugging!
-			// 	actors:          actors,
-			// 	ambient_light_color: vec3.fromValues(0.25, 0.25, 0.25),
-			// }
 
 			// Set the whole image to black
 			regl.clear({color: [0.9, 0.9, 1., 1]});
