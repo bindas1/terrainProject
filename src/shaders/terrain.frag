@@ -67,13 +67,11 @@ void main()
 	vec3 r = 2.0 * dotNL * n - l;
 	vec3 v = -normalize(v2f_dir_from_view);
 
-	float dist_light_and_posn = length(v2f_dir_to_light);
-	vec2 coord_to_get_shadowmap = position_in_light_view.xy;
-	float dist_light_and_first_posn_in_shadow_map = texture2D(shadowmap, coord_to_get_shadowmap).r;
+	vec2 position_in_texture = (position_in_light_view.xy + 1.0) * 0.5; //to convert 0->1 to -1->1
 
-	//we use -l because from the light's perspective, this is basically the coordinate to find the shadow map
+	float dist_light_and_first_posn_in_shadow_map = texture2D(shadowmap, position_in_texture).r;
 
-	if (0. ==  dist_light_and_first_posn_in_shadow_map) {
+	if (-1.0 * position_in_light_view.z < 1.01 * dist_light_and_first_posn_in_shadow_map) {
 		if (dotNL > 0.0){
 			color += light_color * material_color * dotNL;
 			if (dot(v, r) > 0.0){

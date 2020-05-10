@@ -152,11 +152,6 @@ function init_terrain(regl, resources, height_map_buffer) {
 		frag: resources['shaders/terrain.frag'],
 	});
 
-	// let fovy = Math.PI /2
-	// let aspect = 1.
-	// let near = 0.1
-	// let far = 100
-	// const cube_camera_projection = mat4.perspective(mat4.create(), fovy, aspect, near, far);
 	const light_projection = mat4.ortho(mat4.create(), -1.0, 1.0, -1.0, 1.0, 0.1, 100)
 
 	class TerrainActor {
@@ -167,83 +162,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 			this.mat_model_to_world = mat4.create();
 		}
 
-		cube_camera_view(side_idx, mat_view, light_position_cam) {
-			/*
-			Todo 4.1.2 cube_camera_view:
-				Construct the camera matrices which look through one of the 6 cube faces
-				for a cube aligned with the eye coordinate axes.
-				These faces are indexed in the order: +x, -x, +y, -y, +z, -z.
-				So when `side_idx = 0`, we should return the +x camera matrix,
-				and when `side_idx = 5`, we should return the -z one.
-			 */
-
-			var dict = {
-
-						0: {
-							"target" : [1, 0, 0], // view target point
-							"up": [0, 1, 0], // up vector
-						},
-						1: {
-							"target" : [-1, 0, 0], // view target point
-							"up": [0, 1, 0], // up vector
-						},
-						2: {
-							"target" : [0, 1, 0], // view target point
-							"up": [0, 0, -1], // up vector
-						},
-						3: {
-							"target" : [0, -1, 0], // view target point
-							"up": [0, 0, 1], // up vector
-						},
-						4: {
-							"target" : [0, 0, 1], // view target point
-							"up": [0, 1, 0], // up vector
-						},
-						5: {
-							"target" : [0, 0, -1], // view target point
-							"up": [0, 1, 0], // up vector
-						},
-					}
-
-			let good_info = dict[side_idx];
-
-			const position_after_transform = vec3FromVec4(light_position_cam)
-			let target_after_transform = vec3.add(vec3.create(), position_after_transform, good_info["target"])
-
-			let look_at = mat4.lookAt(
-				mat4.create(),
-				position_after_transform, // light/camera position in eye coord
-				target_after_transform, // view eye point
-				good_info["up"], // up vector
-			);
-
-			return mat4_matmul_many(mat4.create(), look_at, mat_view)
-		}
-
 		render_shadowmap({mat_view, light_position_cam, light_position_world}) {
-			// for(let side_idx = 0; side_idx < 6; side_idx ++) {
-			// 	const out_buffer = shadow_cubemap.faces[side_idx];
-
-			// 	// clear buffer, set distance to max
-			// 	regl.clear({
-			// 		color: [0, 0, 0, 1],
-			// 		depth: 1,
-			// 		framebuffer: out_buffer,
-			// 	});
-
-			// 	const mat_model_view = mat4.create();
-			// 	mat4.multiply(mat_model_view, this.cube_camera_view(side_idx, mat_view, light_position_cam), this.mat_model_to_world);
-			// 	const mat_mvp = mat4.create();
-			// 	mat4_matmul_many(mat_mvp, cube_camera_projection, mat_model_view);
-
-			// 	// Measure new distance map
-			// 	pipeline_shadowmap_generation({
-			// 		mat_mvp: mat_mvp,
-			// 		mat_model_view: mat_model_view,
-			// 		out_buffer: out_buffer,
-			// 	});
-			// }
-
 			const out_buffer = shadowmap
 			// clear buffer, set distance to max
 			regl.clear({
