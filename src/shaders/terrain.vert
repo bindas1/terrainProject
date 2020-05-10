@@ -2,12 +2,12 @@ attribute vec3 position;
 attribute vec3 normal;
 
 // Vertex shader computes eye-space vertex position and normals + world-space height
-varying vec3 v2f_position_view; // vertex position in eye (camera) coordinates
 varying vec3 v2f_normal; // normal vector in camera coordinates
 varying vec3 v2f_dir_to_light; // direction to light source
 varying vec3 v2f_dir_from_view; // viewing vector (from eye to vertex in view coordinates)
 varying float v2f_height;
 varying vec3 position_in_light_view; // vertex position in light coordinates
+varying vec3 v2f_dir_from_view_not_normalized;
 
 uniform mat4 mat_mvp;
 uniform mat4 mat_model_view;
@@ -32,19 +32,28 @@ void main()
     */
 
     // viewing vector (from camera to vertex in view coordinates), camera is at vec3(0, 0, 0) in cam coords
-    if(position_v4.z <= -0.031) {
-        position_v4.z = sin(position_v4.x*1000.) * 0.01;
-        newNormal = normalize(vec3(-5.*cos(position_v4.x*500.),0., 1.));
+    if(position_v4.z <= -0.0312) {
+        position_v4.z = cos(position_v4.x*5000.) * sin(position_v4.y * 1000.) * 0.3 - sin(position_v4.x*1000.) * sin(position_v4.y * 1600.) * 0.1;
+
+
+        newNormal = normalize(vec3((3000.*position_v4.x)*sin(1000.*position_v4.y) - 100. * sin(1600.*position_v4.y) * cos(1000.*position_v4.x),0., 1.));
+        //position_v4 = vec4(vec3(position_v4.x, position_v4.y, 0.05 * tex_fbm_for_water(vec2(position_v4.x, position_v4.y))), position_v4.w);
+        //position_v4.z = (cos(1600.0 * position_v4.x) * cos(800.0 * position_v4.y) * 0.024*5.);
+        //newNormal = normalize(vec3(5.*38.4*sin(1600.*position_v4.x)*cos(800.*position_v4.y),0., 1.));
     }
 
-    //position vertec in light coordinate
+    //position vertex in light coordinate
     position_in_light_view = (mat_model_view_light * position_v4).xyz;
-    // position vertex in camera coordiante
-    v2f_position_view = (mat_model_view * position_v4).xyz;
+
+    vec3 vector_view_to_posn = (mat_model_view * position_v4).xyz;
+
     // direction view to position in cam coordinate
-    v2f_dir_from_view = v2f_position_view;//v
+    v2f_dir_from_view = normalize(vector_view_to_posn);//v
+    v2f_dir_from_view_not_normalized = vector_view_to_posn;
+
     //direction position to light source in cam coordinate
-    v2f_dir_to_light = light_position.rgb - v2f_position_view;
+    v2f_dir_to_light = light_position.rgb - vector_view_to_posn;
+
     // transform normal to camera coordinates
     v2f_normal = normalize(mat_normals * newNormal); //n
     gl_Position = mat_mvp * position_v4;

@@ -1,11 +1,11 @@
 precision highp float;
 
 // varying vec2 v2f_tex_coord;
-varying vec3 v2f_position_view; // vertex position in eye (camera) coordinates
 varying vec3 v2f_normal; // normal vector in camera coordinates
 varying vec3 v2f_dir_to_light; // direction to light source
 varying vec3 v2f_dir_from_view; // viewing vector (from eye to vertex in view coordinates)
 varying float v2f_height;
+varying vec3 v2f_dir_from_view_not_normalized; // viewing vector (from eye to vertex in view coordinates)
 varying vec3 position_in_light_view; // vertex position in light coordinates
 
 uniform vec4 light_position; //in camera space coordinates already
@@ -17,6 +17,7 @@ const float terrain_water_level    = -0.03125 + 1e-6;
 const vec3  terrain_color_water    = vec3(0.29, 0.51, 0.62);
 const vec3  terrain_color_mountain = vec3(0.8, 0.5, 0.4);
 const vec3  terrain_color_grass    = vec3(0.33, 0.43, 0.18);
+const vec3  fog_color              = vec3(0.90, 0.90, 1.0);
 
 void main()
 {
@@ -54,9 +55,11 @@ void main()
 		material_color = terrain_color_water;
 		shininess = 8.0;
 	} else {
-		float weight = (height - terrain_water_level) * 2.;
+		float weight = (height - terrain_water_level);
     material_color = mix(terrain_color_grass, terrain_color_mountain, weight);
 	}
+
+
 
 	vec3 color = ambient * material_color;
 
@@ -80,6 +83,13 @@ void main()
 		}
 	}
 
+
+	//apply fog depending on distance from eye
+	float dist_from_eye =  length(v2f_dir_from_view_not_normalized)/50.;
+	dist_from_eye = (dist_from_eye > 0.99)? 1. : dist_from_eye;
+	//dist_from_eye = (dist_from_eye < 0.5)? 0. : dist_from_eye;
+	//dist_from_eye = (dist_from_eye >= 0.9 && dist_from_eye < 0.99)? exp(dist_from_eye-0.8)-0.2 : dist_from_eye;
+	color = mix(color, fog_color, dist_from_eye);
 	gl_FragColor = vec4(color, 1.0);
 
 }

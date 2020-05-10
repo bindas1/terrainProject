@@ -124,7 +124,7 @@ async function main() {
 		Camera
 	---------------------------------------------------------------*/
 	const mat_world_to_cam = mat4.create();
-	const cam_distance_base = 0.75;
+	const cam_distance_base = 5.75;
 
 	let cam_angle_z = -0.5; // in radians!
 	let cam_angle_y = -0.42; // in radians!
@@ -219,7 +219,7 @@ async function main() {
 		}
 	})();
 
-	texture_fbm.draw_texture_to_buffer({width: 96, height: 96, mouse_offset: [-12.24, 8.15]});
+	texture_fbm.draw_texture_to_buffer({width: 300, height: 200, mouse_offset: [0.24, 8.15], zoom_factor: 4.0});
 
 	const terrain_actor = init_terrain(regl, resources, texture_fbm.get_buffer());
 
@@ -305,7 +305,7 @@ async function main() {
 				light_position_cam: light_position_cam,
 			}
 
-			// Set the whole image to black
+			// Set backgorund color
 			regl.clear({color: [0.9, 0.9, 1., 1]});
 
 			terrain_actor.render_shadowmap(scene_info);
