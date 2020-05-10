@@ -276,7 +276,7 @@ async function main() {
 	const mat_mvp = mat4.create();
 
 	// let light_position_world = [0, 0, 0, 1.0];
-	let light_position_world = [1, 1, 1., 1.0];
+	let light_position_world = [1, 1, 10., 1.0];
 
 	const light_position_cam = [0, 0, 0, 0];
 
