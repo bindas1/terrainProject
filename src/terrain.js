@@ -100,6 +100,32 @@ function init_terrain(regl, resources, height_map_buffer) {
 
 	const terrain_mesh = terrain_build_mesh(new BufferData(regl, height_map_buffer));
 
+	const shadowmap = regl.framebuffer({
+		radius:      1024,
+		colorFormat: 'rgba', // GLES 2.0 doesn't support single channel textures : (
+		colorType:   'float',
+  })
+
+	const pipeline_shadowmap_generation = regl({
+		attributes: {
+			position: terrain_mesh.vertex_positions,
+		},
+		// Faces, as triplets of vertex indices
+		elements: terrain_mesh.faces,
+
+		// Uniforms: global data available to the shader
+		uniforms: {
+			mat_mvp:        regl.prop('mat_mvp'),
+			mat_model_view: regl.prop('mat_model_view'),
+		},
+
+		vert: resources.shader_shadowmap_gen_vert,
+		frag: resources.shader_shadowmap_gen_frag,
+
+		// Where the result gets written to:
+		framebuffer: regl.prop('out_buffer'),
+  });
+
 	const pipeline_draw_terrain = regl({
 		attributes: {
 			position: terrain_mesh.vertex_positions,
@@ -108,9 +134,11 @@ function init_terrain(regl, resources, height_map_buffer) {
 		uniforms: {
 			mat_mvp: regl.prop('mat_mvp'),
 			mat_model_view: regl.prop('mat_model_view'),
+			mat_model_view_light: regl.prop('mat_model_view_light'),
 			mat_normals: regl.prop('mat_normals'),
 
 			light_position: regl.prop('light_position'),
+			shadowmap: shadowmap,
 		},
 		elements: terrain_mesh.faces,
 
@@ -118,6 +146,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 		frag: resources['shaders/terrain.frag'],
 	});
 
+	const light_projection = mat4.ortho(mat4.create(), -1.0, 1.0, -1.0, 1.0, 0.1, 100)
 
 	class TerrainActor {
 		constructor() {
@@ -127,7 +156,30 @@ function init_terrain(regl, resources, height_map_buffer) {
 			this.mat_model_to_world = mat4.create();
 		}
 
-		draw({mat_projection, mat_view, light_position_cam}) {
+		render_shadowmap({light_position_world}) {
+			const out_buffer = shadowmap
+			// clear buffer, set distance to max
+			regl.clear({
+				color: [0, 0, 0, 1],
+				depth: 1,
+				framebuffer: out_buffer,
+			});
+
+			const mat_model_view = mat4.create();
+			const look_at = mat4.lookAt(mat4.create(), light_position_world, [0,0,0], [0,1,0])
+			mat4.multiply(mat_model_view, look_at, this.mat_model_to_world);
+			const mat_mvp = mat4.create();
+			mat4_matmul_many(mat_mvp, light_projection, mat_model_view);
+
+			// Measure new distance map
+			pipeline_shadowmap_generation({
+				mat_mvp: mat_mvp,
+				mat_model_view: mat_model_view,
+				out_buffer: out_buffer,
+			});
+		}
+
+		draw_phong_contribution({mat_projection, mat_view, light_position_cam, light_position_world}) {
 			mat4_matmul_many(this.mat_model_view, mat_view, this.mat_model_to_world);
 			mat4_matmul_many(this.mat_mvp, mat_projection, this.mat_model_view);
 
@@ -135,9 +187,13 @@ function init_terrain(regl, resources, height_map_buffer) {
 			mat3.transpose(this.mat_normals, this.mat_normals);
 			mat3.invert(this.mat_normals, this.mat_normals);
 
+			const look_at = mat4.lookAt(mat4.create(), light_position_world, [0,0,0], [0,1,0]);
+			const mat_model_view_light = mat4.multiply(mat4.create(), look_at, this.mat_model_to_world);
+
 			pipeline_draw_terrain({
 				mat_mvp: this.mat_mvp,
 				mat_model_view: this.mat_model_view,
+				mat_model_view_light: mat_model_view_light,
 				mat_normals: this.mat_normals,
 
 				light_position: light_position_cam,
