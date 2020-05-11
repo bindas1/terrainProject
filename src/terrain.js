@@ -67,7 +67,7 @@ function terrain_build_mesh(height_map) {
 				normals[idx] = [0, 0, 1];
 			}
 			//need to distribute gx,gy between [-0.5,0.5] i think unfortunately this doesnt seem to work ;(
-			vertices[idx] = [(gx/grid_width-0.5)*100 , (gy/grid_height-0.5)*100, elevation*20];
+			vertices[idx] = [(gx/grid_width-0.5) , (gy/grid_height-0.5), elevation];
 			//vertices[idx] = [gx ,gy, elevation];
 		}
 	}
@@ -146,6 +146,37 @@ function init_terrain(regl, resources, height_map_buffer) {
 		frag: resources['shaders/terrain.frag'],
 	});
 
+	const flattened_cubemap_pipeline = regl({
+    attributes: {
+      position: [
+        [0., 0.],
+        [1., 0.],
+        [1., 1.],
+        [0., 1.],
+      ],
+    },
+    elements: [
+      [0, 1, 2], // top right
+      [0, 2, 3], // bottom left
+    ],
+    uniforms: {
+      shadowmap_to_show: shadowmap,
+      preview_rect_scale: ({viewportWidth, viewportHeight}) => {
+        const aspect_ratio = viewportWidth / viewportHeight;
+
+        const width_in_viewport_units = 0.8;
+        const heigh_in_viewport_units = 0.4 * aspect_ratio;
+
+        return [
+          width_in_viewport_units,
+          heigh_in_viewport_units,
+        ];
+      },
+    },
+    vert: resources.shader_vis_vert,
+    frag: resources.shader_vis_frag,
+  });
+
 	const light_projection = mat4.ortho(mat4.create(), -1.0, 1.0, -1.0, 1.0, 0.1, 100)
 
 	class TerrainActor {
@@ -198,6 +229,10 @@ function init_terrain(regl, resources, height_map_buffer) {
 
 				light_position: light_position_cam,
 			});
+		}
+
+		visualize_distance_map() {
+			flattened_cubemap_pipeline();
 		}
 	}
 

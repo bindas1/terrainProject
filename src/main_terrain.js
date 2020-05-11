@@ -64,6 +64,8 @@ async function main() {
 		'sun': load_texture(regl, './textures/sun.jpg'),
 		'shader_shadowmap_gen_vert': load_text('./src/shaders/shadowmap_gen.vert'), //for shadowmap
 		'shader_shadowmap_gen_frag': load_text('./src/shaders/shadowmap_gen.frag'),
+		'shader_vis_vert': load_text('./src/shaders/cubemap_visualization.vert'),
+		'shader_vis_frag': load_text('./src/shaders/cubemap_visualization.frag'),
 	};
 
 	[
@@ -124,7 +126,7 @@ async function main() {
 		Camera
 	---------------------------------------------------------------*/
 	const mat_world_to_cam = mat4.create();
-	const cam_distance_base = 5.75;
+	const cam_distance_base = 0.75;
 
 	let cam_angle_z = -0.5; // in radians!
 	let cam_angle_y = -0.42; // in radians!
@@ -219,7 +221,7 @@ async function main() {
 		}
 	})();
 
-	texture_fbm.draw_texture_to_buffer({width: 300, height: 200, mouse_offset: [0.24, 8.15], zoom_factor: 4.0});
+	texture_fbm.draw_texture_to_buffer({width: 300, height: 200, mouse_offset: [0.24, 8.15]});
 
 	const terrain_actor = init_terrain(regl, resources, texture_fbm.get_buffer());
 
@@ -255,7 +257,7 @@ async function main() {
 		sun: {
 			orbits: null,
 			texture: resources.sun,
-			size: 0.5,
+			size: 0.1,
 			rotation_speed: 0.1,
 		},
 	}
@@ -275,8 +277,7 @@ async function main() {
 	const mat_view = mat4.create();
 	const mat_mvp = mat4.create();
 
-	// let light_position_world = [0, 0, 0, 1.0];
-	let light_position_world = [1, 1, 10., 1.0];
+	let light_position_world = [-1, -1, 0., 1.0];
 
 	const light_position_cam = [0, 0, 0, 0];
 
@@ -310,6 +311,7 @@ async function main() {
 
 			terrain_actor.render_shadowmap(scene_info);
 			terrain_actor.draw_phong_contribution(scene_info);
+			terrain_actor.visualize_distance_map();
 
 			for (const actor of actors_list) {
 				calculate_actor_to_world_transform(actor, light_position_world.slice(0,3));
