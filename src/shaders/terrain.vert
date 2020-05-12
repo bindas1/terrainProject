@@ -7,6 +7,7 @@ varying vec3 v2f_dir_to_light; // direction to light source
 varying vec3 v2f_dir_from_view; // viewing vector (from eye to vertex in view coordinates)
 varying float v2f_height;
 varying vec3 position_in_light_view; // vertex position in light coordinates
+varying vec3 up_vector_in_camera_view;
 varying vec3 v2f_dir_from_view_not_normalized;
 
 uniform mat4 mat_mvp;
@@ -42,6 +43,8 @@ void main()
 
     //position vertex in light coordinate
     position_in_light_view = (mat_model_view_light * position_v4).xyz;
+
+    up_vector_in_camera_view = mat_normals * vec3(0,0,1);
 
     vec3 vector_view_to_posn = (mat_model_view * position_v4).xyz;
 
