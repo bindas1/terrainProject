@@ -9,6 +9,7 @@ varying float v2f_height;
 varying vec3 position_in_light_view; // vertex position in light coordinates
 varying vec3 v2f_dir_from_view_not_normalized;
 
+uniform sampler2D height_map;
 uniform float sim_time;
 uniform mat4 mat_mvp;
 uniform mat4 mat_model_view;
@@ -18,7 +19,8 @@ uniform mat3 mat_normals; // mat3 not 4, because normals are only rotated and no
 uniform vec4 light_position; //in camera space coordinates already
 void main()
 {
-    v2f_height = position.z;
+    //TODO maybe we should wait until after changing the position_v4.z before setting the v2f_height?
+    //v2f_height = position.z;
     vec4 position_v4 = vec4(position, 1);
 
     vec3 newNormal = normal;
@@ -38,6 +40,13 @@ void main()
     float t = sim_time*2.;
     float water_level = -0.031;
 
+   
+    
+    vec2 scaled_positions = vec2(position_v4.x*0.1+0.5, position_v4.y*0.1+0.5);
+    position_v4.z = length(texture2D(height_map, scaled_positions).rgb)*10. -10.;
+    
+    v2f_height = position_v4.z; //update height for frag
+    
     if(position_v4.z <= water_level) {
          // simulate little waves on water
         vec2 uv = vec2(position_v4.x, position_v4.y);
@@ -55,7 +64,6 @@ void main()
         //position_v4.z = (cos(1600.0 * position_v4.x) * cos(800.0 * position_v4.y) * 0.024*5.);
         //newNormal = normalize(vec3(5.*38.4*sin(1600.*position_v4.x)*cos(800.*position_v4.y),0., 1.));
     }
-
     //position vertex in light coordinate
     position_in_light_view = (mat_model_view_light * position_v4).xyz;
 

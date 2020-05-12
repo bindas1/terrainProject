@@ -47,7 +47,7 @@ function terrain_build_mesh(height_map) {
 
 			// normal as finite difference of the height map
 			// dz/dx = (h(x+dx) - h(x-dx)) / (2 dx)
-			normals[idx] = vec3.normalize([0, 0, 0], [
+			/*normals[idx] = vec3.normalize([0, 0, 0], [
 				-(height_map.get(gx+1, gy) - height_map.get(gx-1, gy)) / (2. / grid_width),
 				-(height_map.get(gx, gy+1) - height_map.get(gx, gy-1)) / (2. / grid_height),
 				1.,
@@ -67,8 +67,9 @@ function terrain_build_mesh(height_map) {
 				normals[idx] = [0, 0, 1];
 			}
 			//need to distribute gx,gy between [-0.5,0.5] i think unfortunately this doesnt seem to work ;(
-			vertices[idx] = [(gx/grid_width-0.5)*50 , (gy/grid_height-0.5)*50, elevation*10];
-			//vertices[idx] = [gx ,gy, elevation];
+			vertices[idx] = [(gx/grid_width-0.5)*10, (gy/grid_height-0.5)*10, 0.];
+			//vertices[idx] = [gx ,gy, 1.];
+			normals[idx] = [0,0,1]; //flat terrain
 		}
 	}
 
@@ -138,6 +139,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 			mat_normals: regl.prop('mat_normals'),
 			sim_time: regl.prop('sim_time'),
 			light_position: regl.prop('light_position'),
+			height_map: height_map_buffer,
 			shadowmap: shadowmap,
 		},
 		elements: terrain_mesh.faces,

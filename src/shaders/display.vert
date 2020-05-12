@@ -6,7 +6,8 @@ uniform float viewer_scale;
 varying vec2 v2f_tex_coords;
 
 void main() {
-	vec2 local_coord = position * viewer_scale;
+	vec2 off = vec2(1.,0);
+	vec2 local_coord = position+ off  * viewer_scale;
 	v2f_tex_coords = viewer_position + local_coord;
 
 	gl_Position = vec4(position, 0.0, 1.0);
