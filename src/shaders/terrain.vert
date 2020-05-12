@@ -48,7 +48,7 @@ void main()
     vec2 scaled_positions = vec2(position_v4.x*0.01+0.5, position_v4.y*0.01+0.5);
     position_v4.z = length(texture2D(height_map, scaled_positions).rgb)*amplitude - amplitude;
     
-    v2f_height = position_v4.z; //update height for frag
+    
     
     if(position_v4.z <= water_level) {
          // simulate little waves on water
@@ -68,6 +68,7 @@ void main()
         //newNormal = normalize(vec3(5.*38.4*sin(1600.*position_v4.x)*cos(800.*position_v4.y),0., 1.));
     }
     //position vertex in light coordinate
+    v2f_height = position_v4.z; //update height for frag
     position_in_light_view = (mat_model_view_light * position_v4).xyz;
 
     vec3 vector_view_to_posn = (mat_model_view * position_v4).xyz;

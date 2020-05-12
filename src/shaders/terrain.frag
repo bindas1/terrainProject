@@ -73,16 +73,16 @@ void main()
 
 	vec2 position_in_texture = (position_in_light_view.xy + 1.0) * 0.5; //to convert 0->1 to -1->1
 
-	float dist_light_and_first_posn_in_shadow_map = texture2D(shadowmap, position_in_texture).r;
+	//float dist_light_and_first_posn_in_shadow_map = texture2D(shadowmap, position_in_texture).r;
 
-	if (-1.0 * position_in_light_view.z < 1.01 * dist_light_and_first_posn_in_shadow_map) {
+	//if (-1.0 * position_in_light_view.z < 1.01 * dist_light_and_first_posn_in_shadow_map) {
 		if (dotNL > 0.0){
 			color += light_color * material_color * dotNL;
 			if (dot(v, r) > 0.0){
 				color += light_color * material_color * pow(dot(r,v), shininess);
 			}
 		}
-	}
+	//}
 
 
 	//apply fog depending on distance from eye
