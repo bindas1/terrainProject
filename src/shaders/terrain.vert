@@ -50,7 +50,9 @@ void main()
     v2f_dir_from_view_not_normalized = vector_view_to_posn;
 
     //direction position to light source in cam coordinate
-    v2f_dir_to_light = light_position.rgb - vector_view_to_posn;
+    //since light is at infinite, we only care about the direction.
+    //dircetion is 000 -> light posn in world view = light posn in world view ~= light posn in camera view
+    v2f_dir_to_light = light_position.rgb;
 
     // transform normal to camera coordinates
     v2f_normal = normalize(mat_normals * newNormal); //n
