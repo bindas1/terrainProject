@@ -74,7 +74,7 @@ void main()
 
 	float dist_light_and_first_posn_in_shadow_map = texture2D(shadowmap, position_in_texture).r;
 
-	if (-1.0 * position_in_light_view.z < 1.01 * dist_light_and_first_posn_in_shadow_map) {
+	if (-1.0 * position_in_light_view.z < 1.05 * dist_light_and_first_posn_in_shadow_map) {
 		if (dotNL > 0.0){
 			color += light_color * material_color * dotNL;
 			if (dot(v, r) > 0.0){
