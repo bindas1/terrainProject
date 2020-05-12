@@ -287,7 +287,7 @@ async function main() {
 	let sim_time = 0;
 	let prev_regl_time = 0;
 	// let light_position_world = [0, 0, 0, 1.0];
-	let light_position_world = [1, 1, 10., 1.0];
+	let light_position_world = [1, 80., 10., 1.0];
 
 	let is_paused = false;
 
