@@ -303,7 +303,7 @@ async function main() {
 		prev_regl_time = frame.time;*/
 		sim_time = frame.time;
 		
-		//update_needed = true;
+		update_needed = true;
 		if(update_needed) {
 			update_needed = false; // do this *before* running the drawing code so we don't keep updating if drawing throws an error.
 			regl.clear({color: [0.9, 0.9, 1., 1]});
