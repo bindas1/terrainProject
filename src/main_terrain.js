@@ -62,19 +62,21 @@ async function main() {
 	// Start downloads in parallel
 	const resources = {
 		'sun': load_texture(regl, './textures/sun.jpg'),
+		'shader_shadowmap_gen_vert': load_text('./src/shaders/shadowmap_gen.vert'), //for shadowmap
+		'shader_shadowmap_gen_frag': load_text('./src/shaders/shadowmap_gen.frag'),
 	};
 
 	[
 		"noise.frag",
 		"display.vert",
 
-		"terrain.vert",
+		"terrain.vert", //phong for terrain
 		"terrain.frag",
 
 		"buffer_to_screen.vert",
 		"buffer_to_screen.frag",
 
-		"sphere.vert",
+		"sphere.vert", //for sun
 		"sphere.frag",
 	].forEach((shader_filename) => {
 		resources[`shaders/${shader_filename}`] = load_text(`./src/shaders/${shader_filename}`);
@@ -276,7 +278,11 @@ async function main() {
 	let prev_regl_time = 0;
 	// let light_position_world = [0, 0, 0, 1.0];
 	let light_position_world = [1, 1, 10., 1.0];
+
 	let is_paused = false;
+
+
+
 	const light_position_cam = [0, 0, 0, 0];
 
 	regl.frame((frame) => {
@@ -305,6 +311,7 @@ async function main() {
 			const scene_info = {
 				mat_view:        mat_view,
 				mat_projection:  mat_projection,
+				light_position_world: light_position_world,
 				light_position_cam: light_position_cam,
 				sim_time:        sim_time,
 			}
@@ -312,7 +319,8 @@ async function main() {
 			// Set backgorund color
 			regl.clear({color: [0.9, 0.9, 1., 1]});
 
-			terrain_actor.draw(scene_info);
+			terrain_actor.render_shadowmap(scene_info);
+			terrain_actor.draw_phong_contribution(scene_info);
 
 			for (const actor of actors_list) {
 				calculate_actor_to_world_transform(actor, light_position_world.slice(0,3));
