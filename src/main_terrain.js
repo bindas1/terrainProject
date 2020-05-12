@@ -191,7 +191,7 @@ async function main() {
 		}
 
 	});
-
+	let mouse_offset = [0, 0];
 	window.addEventListener('wheel', (event) => {
 		// scroll wheel to zoom in or out
 		const factor_mul_base = 1.08;
@@ -203,6 +203,16 @@ async function main() {
 		update_cam_transform();
 		update_needed = true;
 	})
+
+	register_keyboard_action('d', () => {
+		mouse_offset[0] += 0.1;
+		update_needed = true;
+	})
+
+
+	// Prevent clicking and dragging from selecting the GUI text.
+	canvas_elem.addEventListener('mousedown', (event) => { event.preventDefault(); });
+
 
 	/*---------------------------------------------------------------
 		Actors
@@ -219,9 +229,9 @@ async function main() {
 		}
 	})();
 
-	texture_fbm.draw_texture_to_buffer({width: 300, height: 200, mouse_offset: [0.24, 8.15], zoom_factor: 4.0});
-
-	const terrain_actor = init_terrain(regl, resources, texture_fbm.get_buffer());
+	texture_fbm.draw_texture_to_buffer({width: 96, height: 96, mouse_offset, zoom_factor: 10.});
+	//texture_fbm.draw_buffer_to_screen();
+	let terrain_actor = init_terrain(regl, resources, texture_fbm.get_buffer());
 
 	/*
 		UI
@@ -274,24 +284,38 @@ async function main() {
 	const mat_projection = mat4.create();
 	const mat_view = mat4.create();
 	const mat_mvp = mat4.create();
-
+	let sim_time = 0;
+	let prev_regl_time = 0;
 	// let light_position_world = [0, 0, 0, 1.0];
 	let light_position_world = [1, 1, 10., 1.0];
+
+	let is_paused = false;
+
+
 
 	const light_position_cam = [0, 0, 0, 0];
 
 	regl.frame((frame) => {
-		const sim_time = frame.time
-
+		/*if (! is_paused) {
+			const dt = frame.time - prev_regl_time;
+			sim_time += dt;
+		}
+		prev_regl_time = frame.time;*/
+		sim_time = frame.time;
+		
+		update_needed = true;
 		if(update_needed) {
 			update_needed = false; // do this *before* running the drawing code so we don't keep updating if drawing throws an error.
-
+			regl.clear({color: [0.6, 0.8, 1., 1]});
 			mat4.perspective(mat_projection,
 				deg_to_rad * 60, // fov y
 				frame.framebufferWidth / frame.framebufferHeight, // aspect ratio
 				0.01, // near
 				100, // far
 			)
+
+			texture_fbm.draw_texture_to_buffer({width: 500, height: 300, mouse_offset, zoom_factor: 2.});
+			//texture_fbm.draw_buffer_to_screen();
 
 			mat4.copy(mat_view, mat_world_to_cam);
 
@@ -303,12 +327,11 @@ async function main() {
 				mat_projection:  mat_projection,
 				light_position_world: light_position_world,
 				light_position_cam: light_position_cam,
+				sim_time:        sim_time,
 			}
 
-			// Set backgorund color
-			regl.clear({color: [0.9, 0.9, 1., 1]});
 
-			terrain_actor.render_shadowmap(scene_info);
+			//terrain_actor.render_shadowmap(scene_info);
 			terrain_actor.draw_phong_contribution(scene_info);
 
 			for (const actor of actors_list) {
