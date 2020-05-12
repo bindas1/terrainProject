@@ -13,11 +13,11 @@ uniform sampler2D shadowmap;
 
 const vec3  light_color = vec3(1.0, 0.941, 0.898);
 // Small perturbation to prevent "z-fighting" on the water on some machines...
-const float terrain_water_level    = -5. + 1e-6;
+const float terrain_water_level    = -4.5+0.8 + 1e-6;
 const vec3  terrain_color_water    = vec3(0.29, 0.51, 0.62);
 const vec3  terrain_color_mountain = vec3(0.8, 0.5, 0.4);
 const vec3  terrain_color_grass    = vec3(0.33, 0.43, 0.18);
-const vec3  fog_color              = vec3(0.90, 0.90, 1.0);
+const vec3  fog_color              = vec3(0.6, 0.8, 1.0);
 
 void main()
 {
@@ -56,7 +56,7 @@ void main()
 		shininess = 8.0;
 	} else {
 		//divide by terrain size 
-		float weight = (height - terrain_water_level)/100.;
+		float weight = (height - terrain_water_level)/50.;
     	material_color = mix(terrain_color_grass, terrain_color_mountain, weight);
 	}
 
@@ -86,7 +86,7 @@ void main()
 
 
 	//apply fog depending on distance from eye
-	float fog_density = 1./100.;
+	float fog_density = 1./50.;
 	float dist_from_eye =  length(v2f_dir_from_view_not_normalized)*fog_density;
 	dist_from_eye = (dist_from_eye > 0.99)? 1. : dist_from_eye;
 	//dist_from_eye = (dist_from_eye < 0.5)? 0. : dist_from_eye;

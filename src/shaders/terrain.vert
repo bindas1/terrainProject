@@ -38,12 +38,12 @@ void main()
 
     float time = sim_time*2.;
     float t = sim_time*2.;
-    float water_level = -5.;
+    float water_level = -4.5;
 
    
     
-    //angle
-    float amplitude = 50.;
+    //anplitude
+    float amplitude = 15.;
     //here must mutliply by size of 1/terrain and add 0.5!!
     vec2 scaled_positions = vec2(position_v4.x*0.01+0.5, position_v4.y*0.01+0.5);
     position_v4.z = length(texture2D(height_map, scaled_positions).rgb)*amplitude - amplitude;
@@ -57,7 +57,7 @@ void main()
         float v = 5.*PI;
         float acc = 3.;
         float amplitude = .03;
-        position_v4.z = (sin((uv.x*v-time)*acc)+cos((uv.y*v-time)*acc))*amplitude + water_level;
+        position_v4.z = (sin((uv.x*v-time)*acc)+cos((uv.y*v-time)*acc))*amplitude*2. + water_level;
         //newNormal = normalize(vec3(amplitude*(v*acc*cos((uv.x*v-time)*acc) - acc*v*sin((uv.y*v-time)*acc)), 0., 1.));
         //position_v4.z = cos(position_v4.x*5000.+t) * sin(position_v4.y * 1000.) * 0.05 - sin(position_v4.x*1000.) * sin(position_v4.y * 1600.) * 0.05;
         //newNormal = normalize(vec3(-1500.*sin(10000.*position_v4.x+t)*sin(1000.*position_v4.y) - 100. * sin(1600.*position_v4.y) * cos(1000.*position_v4.x),0., 1.));

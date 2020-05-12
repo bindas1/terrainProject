@@ -306,7 +306,7 @@ async function main() {
 		update_needed = true;
 		if(update_needed) {
 			update_needed = false; // do this *before* running the drawing code so we don't keep updating if drawing throws an error.
-			regl.clear({color: [0.9, 0.9, 1., 1]});
+			regl.clear({color: [0.6, 0.8, 1., 1]});
 			mat4.perspective(mat_projection,
 				deg_to_rad * 60, // fov y
 				frame.framebufferWidth / frame.framebufferHeight, // aspect ratio
@@ -314,7 +314,7 @@ async function main() {
 				100, // far
 			)
 
-			texture_fbm.draw_texture_to_buffer({width: 200, height: 96, mouse_offset, zoom_factor: 2.0});
+			texture_fbm.draw_texture_to_buffer({width: 500, height: 300, mouse_offset, zoom_factor: 2.5});
 			//texture_fbm.draw_buffer_to_screen();
 
 			mat4.copy(mat_view, mat_world_to_cam);
@@ -330,8 +330,6 @@ async function main() {
 				sim_time:        sim_time,
 			}
 
-			// Set backgorund color
-			
 
 			//terrain_actor.render_shadowmap(scene_info);
 			terrain_actor.draw_phong_contribution(scene_info);
