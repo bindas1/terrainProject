@@ -38,12 +38,15 @@ void main()
 
     float time = sim_time*2.;
     float t = sim_time*2.;
-    float water_level = -0.031;
+    float water_level = -5.;
 
    
     
-    vec2 scaled_positions = vec2(position_v4.x*0.1+0.5, position_v4.y*0.1+0.5);
-    position_v4.z = length(texture2D(height_map, scaled_positions).rgb)*10. -10.;
+    //angle
+    float amplitude = 50.;
+    //here must mutliply by size of 1/terrain and add 0.5!!
+    vec2 scaled_positions = vec2(position_v4.x*0.01+0.5, position_v4.y*0.01+0.5);
+    position_v4.z = length(texture2D(height_map, scaled_positions).rgb)*amplitude - amplitude;
     
     v2f_height = position_v4.z; //update height for frag
     

@@ -314,7 +314,7 @@ async function main() {
 				100, // far
 			)
 
-			texture_fbm.draw_texture_to_buffer({width: 96, height: 96, mouse_offset, zoom_factor: 1.0});
+			texture_fbm.draw_texture_to_buffer({width: 200, height: 96, mouse_offset, zoom_factor: 100.0});
 			//texture_fbm.draw_buffer_to_screen();
 
 			mat4.copy(mat_view, mat_world_to_cam);
