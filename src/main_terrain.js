@@ -217,7 +217,7 @@ async function main() {
 		}
 	})();
 
-	texture_fbm.draw_texture_to_buffer({width: 300, height: 200, mouse_offset: [0.24, 8.15], zoom_factor: 4.0});
+	texture_fbm.draw_texture_to_buffer({width: 300, height: 200, mouse_offset: [0.24, 8.15], zoom_factor: 2.0});
 
 	const terrain_actor = init_terrain(regl, resources, texture_fbm.get_buffer());
 
@@ -272,15 +272,21 @@ async function main() {
 	const mat_projection = mat4.create();
 	const mat_view = mat4.create();
 	const mat_mvp = mat4.create();
-
+	let sim_time = 0;
+	let prev_regl_time = 0;
 	// let light_position_world = [0, 0, 0, 1.0];
-	let light_position_world = [1, 1, 1., 1.0];
-
+	let light_position_world = [1, 1, 10., 1.0];
+	let is_paused = false;
 	const light_position_cam = [0, 0, 0, 0];
 
 	regl.frame((frame) => {
-		const sim_time = frame.time
-
+		/*if (! is_paused) {
+			const dt = frame.time - prev_regl_time;
+			sim_time += dt;
+		}
+		prev_regl_time = frame.time;*/
+		sim_time = frame.time;
+		update_needed = true;
 		if(update_needed) {
 			update_needed = false; // do this *before* running the drawing code so we don't keep updating if drawing throws an error.
 
@@ -300,6 +306,7 @@ async function main() {
 				mat_view:        mat_view,
 				mat_projection:  mat_projection,
 				light_position_cam: light_position_cam,
+				sim_time:        sim_time,
 			}
 
 			// Set backgorund color

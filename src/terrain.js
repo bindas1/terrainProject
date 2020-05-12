@@ -67,7 +67,7 @@ function terrain_build_mesh(height_map) {
 				normals[idx] = [0, 0, 1];
 			}
 			//need to distribute gx,gy between [-0.5,0.5] i think unfortunately this doesnt seem to work ;(
-			vertices[idx] = [(gx/grid_width-0.5)*100 , (gy/grid_height-0.5)*100, elevation*20];
+			vertices[idx] = [(gx/grid_width-0.5)*50 , (gy/grid_height-0.5)*50, elevation*10];
 			//vertices[idx] = [gx ,gy, elevation];
 		}
 	}
@@ -109,7 +109,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 			mat_mvp: regl.prop('mat_mvp'),
 			mat_model_view: regl.prop('mat_model_view'),
 			mat_normals: regl.prop('mat_normals'),
-
+			sim_time: regl.prop('sim_time'),
 			light_position: regl.prop('light_position'),
 		},
 		elements: terrain_mesh.faces,
@@ -127,7 +127,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 			this.mat_model_to_world = mat4.create();
 		}
 
-		draw({mat_projection, mat_view, light_position_cam}) {
+		draw({mat_projection, mat_view, light_position_cam, sim_time}) {
 			mat4_matmul_many(this.mat_model_view, mat_view, this.mat_model_to_world);
 			mat4_matmul_many(this.mat_mvp, mat_projection, this.mat_model_view);
 
@@ -139,7 +139,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 				mat_mvp: this.mat_mvp,
 				mat_model_view: this.mat_model_view,
 				mat_normals: this.mat_normals,
-
+				sim_time: sim_time,
 				light_position: light_position_cam,
 			});
 		}

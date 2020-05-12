@@ -8,6 +8,7 @@ varying vec3 v2f_dir_from_view; // viewing vector (from eye to vertex in view co
 varying float v2f_height;
 varying vec3 v2f_dir_from_view_not_normalized;
 
+uniform float sim_time;
 uniform mat4 mat_mvp;
 uniform mat4 mat_model_view;
 uniform mat3 mat_normals; // mat3 not 4, because normals are only rotated and not translated
@@ -30,9 +31,21 @@ void main()
     */
 
     // viewing vector (from camera to vertex in view coordinates), camera is at vec3(0, 0, 0) in cam coords
-    if(position_v4.z <= -0.0312) {
-        position_v4.z = cos(position_v4.x*5000.) * sin(position_v4.y * 1000.) * 0.3 - sin(position_v4.x*1000.) * sin(position_v4.y * 1600.) * 0.1;
-        newNormal = normalize(vec3(-1500.*sin(10000.*position_v4.x)*sin(1000.*position_v4.y) - 100. * sin(1600.*position_v4.y) * cos(1000.*position_v4.x),0., 1.));
+    float time = sim_time*2.;
+    float t = sim_time*2.;
+    float water_level = -0.031;
+
+    if(position_v4.z <= water_level) {
+         // simulate little waves on water
+        vec2 uv = vec2(position_v4.x, position_v4.y);
+        const float PI = 3.1415;
+        float v = 5.*PI;
+        float acc = 3.;
+        float amplitude = .03;
+        position_v4.z = (sin((uv.x*v-time)*acc)+cos((uv.y*v-time)*acc))*amplitude + water_level;
+        //newNormal = normalize(vec3(amplitude*(v*acc*cos((uv.x*v-time)*acc) - acc*v*sin((uv.y*v-time)*acc)), 0., 1.));
+        //position_v4.z = cos(position_v4.x*5000.+t) * sin(position_v4.y * 1000.) * 0.05 - sin(position_v4.x*1000.) * sin(position_v4.y * 1600.) * 0.05;
+        //newNormal = normalize(vec3(-1500.*sin(10000.*position_v4.x+t)*sin(1000.*position_v4.y) - 100. * sin(1600.*position_v4.y) * cos(1000.*position_v4.x),0., 1.));
         //position_v4 = vec4(vec3(position_v4.x, position_v4.y, 0.05 * tex_fbm_for_water(vec2(position_v4.x, position_v4.y))), position_v4.w);
         //position_v4.z = (cos(1600.0 * position_v4.x) * cos(800.0 * position_v4.y) * 0.024*5.);
         //newNormal = normalize(vec3(5.*38.4*sin(1600.*position_v4.x)*cos(800.*position_v4.y),0., 1.));

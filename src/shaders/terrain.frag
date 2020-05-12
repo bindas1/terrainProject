@@ -9,7 +9,7 @@ varying vec3 v2f_dir_from_view_not_normalized; // viewing vector (from eye to ve
 
 const vec3  light_color = vec3(1.0, 0.941, 0.898);
 // Small perturbation to prevent "z-fighting" on the water on some machines...
-const float terrain_water_level    = -0.03125 + 1e-6;
+const float terrain_water_level    = -0.0315 + 1e-6;
 const vec3  terrain_color_water    = vec3(0.29, 0.51, 0.62);
 const vec3  terrain_color_mountain = vec3(0.8, 0.5, 0.4);
 const vec3  terrain_color_grass    = vec3(0.33, 0.43, 0.18);
@@ -17,7 +17,7 @@ const vec3  fog_color              = vec3(0.90, 0.90, 1.0);
 
 void main()
 {
-	const vec3 ambient = 0.2 * light_color; // Ambient light intensity
+	const vec3 ambient = 0.05 * light_color; // Ambient light intensity
 	float height = v2f_height;
 
 	/* TODO
@@ -32,7 +32,7 @@ void main()
 	 		shininess = 0.5
 	*/
 	vec3 material_color = terrain_color_grass;
-	float shininess = 0.5;
+	float shininess = 0.1;
 
 	/* TODO 3.2: apply the phong lighting model
     	Implement the Phong shading model by using the passed variables and write the resulting color to `color`.
@@ -52,7 +52,7 @@ void main()
 		shininess = 8.0;
 	} else {
 		float weight = (height - terrain_water_level);
-    material_color = mix(terrain_color_grass, terrain_color_mountain, weight);
+    	material_color = mix(terrain_color_grass, terrain_color_mountain, weight);
 	}
 
 
