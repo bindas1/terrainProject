@@ -204,8 +204,53 @@ async function main() {
 		update_needed = true;
 	})
 
+	let speed = 0.1;
+
+	// down
+	register_keyboard_action('s', () => {
+		let x_offset = Math.cos(cam_angle_z);
+		let y_offset = -Math.sin(cam_angle_z);
+
+		mouse_offset[0] += x_offset * speed;
+		mouse_offset[1] += y_offset * speed;
+		
+		//mouse_offset[0] += 0.1;
+		update_needed = true;
+	})
+
+	// up
+	register_keyboard_action('w', () => {
+		let x_offset = -Math.cos(cam_angle_z);
+		let y_offset = Math.sin(cam_angle_z);
+
+		mouse_offset[0] += x_offset * speed;
+		mouse_offset[1] += y_offset * speed;
+
+		// for 0 degrees
+		// mouse_offset[0] -= 0.1; 
+		
+		update_needed = true;
+	})
+
+	// right
 	register_keyboard_action('d', () => {
-		mouse_offset[0] += 0.1;
+		let x_offset = Math.cos(cam_angle_z);
+		let y_offset = Math.sin(cam_angle_z);
+
+		mouse_offset[1] += x_offset * speed;
+		mouse_offset[0] += y_offset * speed;
+
+		update_needed = true;
+	})
+
+	// left
+	register_keyboard_action('a', () => {
+		// for 0 degrees needs to be -1
+		let x_offset = -Math.cos(cam_angle_z);
+		let y_offset = -Math.sin(cam_angle_z);
+
+		mouse_offset[1] += x_offset * speed;
+		mouse_offset[0] += y_offset * speed;
 		update_needed = true;
 	})
 
@@ -351,7 +396,7 @@ async function main() {
 		debug_text.textContent = `
 		Hello! Sim time is ${sim_time.toFixed(2)} s
 		Camera: angle_z ${(cam_angle_z / deg_to_rad).toFixed(1)}, angle_y ${(cam_angle_y / deg_to_rad).toFixed(1)}, distance ${(cam_distance_factor*cam_distance_base).toFixed(1)}
-		`;
+		, degrees (0-90 0-1 90-180 1-2 180-270 2-3) ${((Math.abs(cam_angle_z / deg_to_rad)) % 360) / 90}, cos from radian ${(Math.cos(cam_angle_z))},sin from radian ${(Math.sin(cam_angle_z))}`;
 	});
 }
 
