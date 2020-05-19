@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>proposal</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="icg_report.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="perlin-noise-based-realistic-mountain-terrain-report">Perlin-noise based realistic mountain terrain report</h1>
+<h3 id="current-progress">Current Progress</h3>
+<ul>
+<li>Core Goal - Infinite landscape on the GPU
+<ul>
+<li>enlarged the terrain map</li>
+<li>added fog in the background, which masks terrain and water very far away</li>
+</ul></li>
+</ul>
+<p>Extension goals</p>
+<ul>
+<li>Water simulation [0.5]
+<ul>
+<li>played around with the waves functions</li>
+<li>added time simulation, changing the shape of water waves</li>
+<li>tried to implement a simple water texture</li>
+</ul></li>
+</ul>
+<figure>
+<img src="https://i.gyazo.com/665b12a82c91aee2258816ea3ca6ea2d.gif" alt="Water waves simulation" /><figcaption>Water waves simulation</figcaption>
+</figure>
+<ul>
+<li>Directional shadows [0.5]
+<ul>
+<li>Adapt the shadow-mapping technique to a light source that is at infinity (sun), all light rays are then parallel. Almost done. There are directional shadows in our terrain now.</li>
+<li>Issues:
+<ul>
+<li>Only part of the terrain has shadows. Can be fixed by increasing the size of the box for directional shadow.</li>
+<li>Visualizing the shadow map doesn’t work at all for big terrain. It might be an indication that my shadow map is wrong. Still debugging.</li>
+<li>My phong lighting might be wrong because it’s still using a light position. Can be fixed by putting the light position really far away.</li>
+</ul></li>
+<li>Animate the sun’s movement and color throughout the day.</li>
+<li>To be done</li>
+</ul></li>
+</ul>
+<p>Orthogonal shadow on the bottom left. Perspective view of the mesh in the middle. We can see that it looks similar. The result is like the second image</p>
+<p><img src="images/1.png" width="700"></p>
+<p><img src="images/2.png" width="700"></p>
+<p>Current final result: terrain with fog, wave, and directional shadow</p>
+<p><img src="images/3.png" width="700"></p>
+<h3 id="updated-schedule">Updated Schedule</h3>
+<ul>
+<li>Week 1 (April 20)
+<ul>
+<li>Tuesday, April 21 - Project proposal due - everybody - done</li>
+<li>Friday, April 24 - Proposal feedback due - everybody - done</li>
+<li>Finalize the details of the project - everybody - done</li>
+</ul></li>
+<li>Week 2 (April 27)
+<ul>
+<li>Set up the project files - Bartek - done</li>
+<li>Perlin noise - Bartek and Gianni - done</li>
+<li>Elevation - Gianni - done</li>
+</ul></li>
+<li>Week 3 (May 4)
+<ul>
+<li>Adding fog, so terrain fades out - Gianni - done</li>
+<li>Moving the camera around a center point - Gianni - done</li>
+<li>Phong lighting - Fan - done</li>
+<li>Shadows - Fan - almost done. Some bugs remains</li>
+</ul></li>
+<li>Week 4 (May 11) - mostly core goal
+<ul>
+<li>Tuesday May 12, 1PM - Milestone report due - everybody</li>
+<li>Infinite Terrain with the camera - Bartek and Gianni - postponed till May 18</li>
+<li>Sun and moon rotation - Fan - todo</li>
+<li>Day and night transition -Fan - todo</li>
+</ul></li>
+<li>Week 5 (May 18) - extensions
+<ul>
+<li>Realistic water(with perlin noise) - Gianni, Fan</li>
+<li>Reflection of mountains on water - Bartek</li>
+<li>Additional features - we’ll work on them together depending what will be the particular interest of each team member</li>
+</ul></li>
+<li>Week 6 (May 26)
+<ul>
+<li>Tuesday May 26, 1PM - Final presentation video due - everybody</li>
+<li>Friday May 29, 1PM - Final report webpage due - everybody</li>
+</ul></li>
+</ul>
+</body>
+</html>

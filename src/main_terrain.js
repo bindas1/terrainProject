@@ -62,19 +62,21 @@ async function main() {
 	// Start downloads in parallel
 	const resources = {
 		'sun': load_texture(regl, './textures/sun.jpg'),
+		'shader_shadowmap_gen_vert': load_text('./src/shaders/shadowmap_gen.vert'), //for shadowmap
+		'shader_shadowmap_gen_frag': load_text('./src/shaders/shadowmap_gen.frag'),
 	};
 
 	[
 		"noise.frag",
 		"display.vert",
 
-		"terrain.vert",
+		"terrain.vert", //phong for terrain
 		"terrain.frag",
 
 		"buffer_to_screen.vert",
 		"buffer_to_screen.frag",
 
-		"sphere.vert",
+		"sphere.vert", //for sun
 		"sphere.frag",
 	].forEach((shader_filename) => {
 		resources[`shaders/${shader_filename}`] = load_text(`./src/shaders/${shader_filename}`);
@@ -122,7 +124,7 @@ async function main() {
 		Camera
 	---------------------------------------------------------------*/
 	const mat_world_to_cam = mat4.create();
-	const cam_distance_base = 0.75;
+	const cam_distance_base = 5.75;
 
 	let cam_angle_z = -0.5; // in radians!
 	let cam_angle_y = -0.42; // in radians!
@@ -189,7 +191,7 @@ async function main() {
 		}
 
 	});
-
+	let mouse_offset = [0, 0];
 	window.addEventListener('wheel', (event) => {
 		// scroll wheel to zoom in or out
 		const factor_mul_base = 1.08;
@@ -201,6 +203,61 @@ async function main() {
 		update_cam_transform();
 		update_needed = true;
 	})
+
+	let speed = 0.1;
+
+	// down
+	register_keyboard_action('s', () => {
+		let x_offset = Math.cos(cam_angle_z);
+		let y_offset = -Math.sin(cam_angle_z);
+
+		mouse_offset[0] += x_offset * speed;
+		mouse_offset[1] += y_offset * speed;
+		
+		//mouse_offset[0] += 0.1;
+		update_needed = true;
+	})
+
+	// up
+	register_keyboard_action('w', () => {
+		let x_offset = -Math.cos(cam_angle_z);
+		let y_offset = Math.sin(cam_angle_z);
+
+		mouse_offset[0] += x_offset * speed;
+		mouse_offset[1] += y_offset * speed;
+
+		// for 0 degrees
+		// mouse_offset[0] -= 0.1; 
+		
+		update_needed = true;
+	})
+
+	// right
+	register_keyboard_action('d', () => {
+		let x_offset = Math.cos(cam_angle_z);
+		let y_offset = Math.sin(cam_angle_z);
+
+		mouse_offset[1] += x_offset * speed;
+		mouse_offset[0] += y_offset * speed;
+
+		update_needed = true;
+	})
+
+	// left
+	register_keyboard_action('a', () => {
+		// for 0 degrees needs to be -1
+		let x_offset = -Math.cos(cam_angle_z);
+		let y_offset = -Math.sin(cam_angle_z);
+
+		mouse_offset[1] += x_offset * speed;
+		mouse_offset[0] += y_offset * speed;
+		update_needed = true;
+	})
+
+
+	// Prevent clicking and dragging from selecting the GUI text.
+	canvas_elem.addEventListener('mousedown', (event) => { event.preventDefault(); });
+
 
 	/*---------------------------------------------------------------
 		Actors
@@ -217,9 +274,9 @@ async function main() {
 		}
 	})();
 
-	texture_fbm.draw_texture_to_buffer({width: 96, height: 96, mouse_offset: [-12.24, 8.15], zoom_factor: 5.});
-
-	const terrain_actor = init_terrain(regl, resources, texture_fbm.get_buffer());
+	texture_fbm.draw_texture_to_buffer({width: 96, height: 96, mouse_offset, zoom_factor: 10.});
+	//texture_fbm.draw_buffer_to_screen();
+	let terrain_actor = init_terrain(regl, resources, texture_fbm.get_buffer());
 
 	/*
 		UI
@@ -272,24 +329,38 @@ async function main() {
 	const mat_projection = mat4.create();
 	const mat_view = mat4.create();
 	const mat_mvp = mat4.create();
-
+	let sim_time = 0;
+	let prev_regl_time = 0;
 	// let light_position_world = [0, 0, 0, 1.0];
-	let light_position_world = [1, 1, 1., 1.0];
+	let light_position_world = [1, 80., 10., 1.0];
+
+	let is_paused = false;
+
+
 
 	const light_position_cam = [0, 0, 0, 0];
 
 	regl.frame((frame) => {
-		const sim_time = frame.time
-
+		/*if (! is_paused) {
+			const dt = frame.time - prev_regl_time;
+			sim_time += dt;
+		}
+		prev_regl_time = frame.time;*/
+		sim_time = frame.time;
+		
+		update_needed = true;
 		if(update_needed) {
 			update_needed = false; // do this *before* running the drawing code so we don't keep updating if drawing throws an error.
-
+			regl.clear({color: [0.6, 0.8, 1., 1]});
 			mat4.perspective(mat_projection,
 				deg_to_rad * 60, // fov y
 				frame.framebufferWidth / frame.framebufferHeight, // aspect ratio
 				0.01, // near
 				100, // far
 			)
+
+			texture_fbm.draw_texture_to_buffer({width: 500, height: 300, mouse_offset, zoom_factor: 2.});
+			//texture_fbm.draw_buffer_to_screen();
 
 			mat4.copy(mat_view, mat_world_to_cam);
 
@@ -299,13 +370,14 @@ async function main() {
 			const scene_info = {
 				mat_view:        mat_view,
 				mat_projection:  mat_projection,
+				light_position_world: light_position_world,
 				light_position_cam: light_position_cam,
+				sim_time:        sim_time,
 			}
 
-			// Set the whole image to black
-			regl.clear({color: [0.9, 0.9, 1., 1]});
 
-			terrain_actor.draw(scene_info);
+			//terrain_actor.render_shadowmap(scene_info);
+			terrain_actor.draw_phong_contribution(scene_info);
 
 			for (const actor of actors_list) {
 				calculate_actor_to_world_transform(actor, light_position_world.slice(0,3));
@@ -324,7 +396,7 @@ async function main() {
 		debug_text.textContent = `
 		Hello! Sim time is ${sim_time.toFixed(2)} s
 		Camera: angle_z ${(cam_angle_z / deg_to_rad).toFixed(1)}, angle_y ${(cam_angle_y / deg_to_rad).toFixed(1)}, distance ${(cam_distance_factor*cam_distance_base).toFixed(1)}
-		`;
+		, degrees (0-90 0-1 90-180 1-2 180-270 2-3) ${((Math.abs(cam_angle_z / deg_to_rad)) % 360) / 90}, cos from radian ${(Math.cos(cam_angle_z))},sin from radian ${(Math.sin(cam_angle_z))}`;
 	});
 }
 

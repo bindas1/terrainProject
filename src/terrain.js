@@ -47,7 +47,7 @@ function terrain_build_mesh(height_map) {
 
 			// normal as finite difference of the height map
 			// dz/dx = (h(x+dx) - h(x-dx)) / (2 dx)
-			normals[idx] = vec3.normalize([0, 0, 0], [
+			/*normals[idx] = vec3.normalize([0, 0, 0], [
 				-(height_map.get(gx+1, gy) - height_map.get(gx-1, gy)) / (2. / grid_width),
 				-(height_map.get(gx, gy+1) - height_map.get(gx, gy-1)) / (2. / grid_height),
 				1.,
@@ -62,13 +62,14 @@ function terrain_build_mesh(height_map) {
 
 			The XY coordinates are calculated so that the full grid covers the square [-0.5, 0.5]^2 in the XY plane.
 			*/
-			if(elevation < WATER_LEVEL) {
+			/*if(elevation < WATER_LEVEL) {
 				elevation = WATER_LEVEL;
 				normals[idx] = [0, 0, 1];
-			}
+			}*/
 			//need to distribute gx,gy between [-0.5,0.5] i think unfortunately this doesnt seem to work ;(
-			vertices[idx] = [(gx/grid_width-0.5)*5 , (gy/grid_height-0.5)*5, elevation*2];
-			//vertices[idx] = [gx ,gy, elevation];
+			vertices[idx] = [(gx/grid_width-0.5)*100, (gy/grid_height-0.5)*100, 0.];
+			//vertices[idx] = [gx ,gy, 1.];
+			normals[idx] = [0,0,1]; //flat terrain
 		}
 	}
 
@@ -100,6 +101,32 @@ function init_terrain(regl, resources, height_map_buffer) {
 
 	const terrain_mesh = terrain_build_mesh(new BufferData(regl, height_map_buffer));
 
+	const shadowmap = regl.framebuffer({
+		radius:      1024,
+		colorFormat: 'rgba', // GLES 2.0 doesn't support single channel textures : (
+		colorType:   'float',
+  })
+
+	const pipeline_shadowmap_generation = regl({
+		attributes: {
+			position: terrain_mesh.vertex_positions,
+		},
+		// Faces, as triplets of vertex indices
+		elements: terrain_mesh.faces,
+
+		// Uniforms: global data available to the shader
+		uniforms: {
+			mat_mvp:        regl.prop('mat_mvp'),
+			mat_model_view: regl.prop('mat_model_view'),
+		},
+
+		vert: resources.shader_shadowmap_gen_vert,
+		frag: resources.shader_shadowmap_gen_frag,
+
+		// Where the result gets written to:
+		framebuffer: regl.prop('out_buffer'),
+  });
+
 	const pipeline_draw_terrain = regl({
 		attributes: {
 			position: terrain_mesh.vertex_positions,
@@ -108,9 +135,12 @@ function init_terrain(regl, resources, height_map_buffer) {
 		uniforms: {
 			mat_mvp: regl.prop('mat_mvp'),
 			mat_model_view: regl.prop('mat_model_view'),
+			mat_model_view_light: regl.prop('mat_model_view_light'),
 			mat_normals: regl.prop('mat_normals'),
-
+			sim_time: regl.prop('sim_time'),
 			light_position: regl.prop('light_position'),
+			height_map: height_map_buffer,
+			shadowmap: shadowmap,
 		},
 		elements: terrain_mesh.faces,
 
@@ -118,6 +148,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 		frag: resources['shaders/terrain.frag'],
 	});
 
+	const light_projection = mat4.ortho(mat4.create(), -1.0, 1.0, -1.0, 1.0, 0.1, 100)
 
 	class TerrainActor {
 		constructor() {
@@ -127,7 +158,30 @@ function init_terrain(regl, resources, height_map_buffer) {
 			this.mat_model_to_world = mat4.create();
 		}
 
-		draw({mat_projection, mat_view, light_position_cam}) {
+		render_shadowmap({light_position_world}) {
+			const out_buffer = shadowmap
+			// clear buffer, set distance to max
+			regl.clear({
+				color: [0, 0, 0, 1],
+				depth: 1,
+				framebuffer: out_buffer,
+			});
+
+			const mat_model_view = mat4.create();
+			const look_at = mat4.lookAt(mat4.create(), light_position_world, [0,0,0], [0,1,0])
+			mat4.multiply(mat_model_view, look_at, this.mat_model_to_world);
+			const mat_mvp = mat4.create();
+			mat4_matmul_many(mat_mvp, light_projection, mat_model_view);
+
+			// Measure new distance map
+			pipeline_shadowmap_generation({
+				mat_mvp: mat_mvp,
+				mat_model_view: mat_model_view,
+				out_buffer: out_buffer,
+			});
+		}
+
+		draw_phong_contribution({mat_projection, mat_view, light_position_cam, light_position_world, sim_time}) {
 			mat4_matmul_many(this.mat_model_view, mat_view, this.mat_model_to_world);
 			mat4_matmul_many(this.mat_mvp, mat_projection, this.mat_model_view);
 
@@ -135,11 +189,15 @@ function init_terrain(regl, resources, height_map_buffer) {
 			mat3.transpose(this.mat_normals, this.mat_normals);
 			mat3.invert(this.mat_normals, this.mat_normals);
 
+			const look_at = mat4.lookAt(mat4.create(), light_position_world, [0,0,0], [0,1,0]);
+			const mat_model_view_light = mat4.multiply(mat4.create(), look_at, this.mat_model_to_world);
+
 			pipeline_draw_terrain({
 				mat_mvp: this.mat_mvp,
 				mat_model_view: this.mat_model_view,
+				mat_model_view_light: mat_model_view_light,
 				mat_normals: this.mat_normals,
-
+				sim_time: sim_time,
 				light_position: light_position_cam,
 			});
 		}
