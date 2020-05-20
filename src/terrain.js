@@ -47,7 +47,7 @@ function terrain_build_mesh(height_map) {
 
 			// normal as finite difference of the height map
 			// dz/dx = (h(x+dx) - h(x-dx)) / (2 dx)
-			normals[idx] = vec3.normalize([0, 0, 0], [
+			/*normals[idx] = vec3.normalize([0, 0, 0], [
 				-(height_map.get(gx+1, gy) - height_map.get(gx-1, gy)) / (2. / grid_width),
 				-(height_map.get(gx, gy+1) - height_map.get(gx, gy-1)) / (2. / grid_height),
 				1.,
@@ -62,13 +62,14 @@ function terrain_build_mesh(height_map) {
 
 			The XY coordinates are calculated so that the full grid covers the square [-0.5, 0.5]^2 in the XY plane.
 			*/
-			if(elevation < WATER_LEVEL) {
+			/*if(elevation < WATER_LEVEL) {
 				elevation = WATER_LEVEL;
 				normals[idx] = [0, 0, 1];
-			}
+			}*/
 			//need to distribute gx,gy between [-0.5,0.5] i think unfortunately this doesnt seem to work ;(
-			vertices[idx] = [(gx/grid_width-0.5) , (gy/grid_height-0.5), elevation];
-			//vertices[idx] = [gx ,gy, elevation];
+			vertices[idx] = [(gx/grid_width-0.5)*100, (gy/grid_height-0.5)*100, 0.];
+			//vertices[idx] = [gx ,gy, 1.];
+			normals[idx] = [0,0,1]; //flat terrain
 		}
 	}
 
@@ -136,8 +137,9 @@ function init_terrain(regl, resources, height_map_buffer) {
 			mat_model_view: regl.prop('mat_model_view'),
 			mat_model_view_light: regl.prop('mat_model_view_light'),
 			mat_normals: regl.prop('mat_normals'),
-
+			sim_time: regl.prop('sim_time'),
 			light_position: regl.prop('light_position'),
+			height_map: height_map_buffer,
 			shadowmap: shadowmap,
 		},
 		elements: terrain_mesh.faces,
@@ -210,7 +212,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 			});
 		}
 
-		draw_phong_contribution({mat_projection, mat_view, light_position_cam, light_position_world}) {
+		draw_phong_contribution({mat_projection, mat_view, light_position_cam, light_position_world, sim_time}) {
 			mat4_matmul_many(this.mat_model_view, mat_view, this.mat_model_to_world);
 			mat4_matmul_many(this.mat_mvp, mat_projection, this.mat_model_view);
 
@@ -226,7 +228,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 				mat_model_view: this.mat_model_view,
 				mat_model_view_light: mat_model_view_light,
 				mat_normals: this.mat_normals,
-
+				sim_time: sim_time,
 				light_position: light_position_cam,
 			});
 		}
