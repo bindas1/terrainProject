@@ -7,7 +7,6 @@ varying vec3 v2f_dir_from_view; // viewing vector (from eye to vertex in view co
 varying float v2f_height;
 varying vec3 v2f_dir_from_view_not_normalized; // viewing vector (from eye to vertex in view coordinates)
 varying vec3 position_in_light_view; // vertex position in light coordinates
-varying vec3 up_vector_in_camera_view;
 
 uniform vec4 light_position; //in camera space coordinates already
 uniform sampler2D shadowmap;
@@ -70,14 +69,17 @@ void main()
 	vec3 l = normalize(v2f_dir_to_light);
 	float dotNL = dot(l,n);
 
-	vec3 r = 2.0 * dotNL * n - l;
+	vec3 r = normalize(2.0 * dotNL * n - l);
 	vec3 v = -normalize(v2f_dir_from_view);
 
 	vec2 position_in_texture = (position_in_light_view.xy + 1.0) * 0.5; //to convert 0->1 to -1->1
 
-	//float dist_light_and_first_posn_in_shadow_map = texture2D(shadowmap, position_in_texture).r;
+	// float dist_light_and_first_posn_in_shadow_map = texture2D(shadowmap, position_in_texture).r;
+	// vec3 up_vector_in_camera_view = normalize(mat_normals * vec3(0,0,1));
 
 	// if (-1.0 * position_in_light_view.z < 1.1 * dist_light_and_first_posn_in_shadow_map && dot(up_vector_in_camera_view, v2f_dir_to_light) > 0.0) {
+	// if (-1.0 * position_in_light_view.z < 1.1 * dist_light_and_first_posn_in_shadow_map) {
+	// if (dot(up_vector_in_camera_view, v2f_dir_to_light) > 0.0){
 		if (dotNL > 0.0){
 			color += light_color * material_color * dotNL;
 			if (dot(v, r) > 0.0){

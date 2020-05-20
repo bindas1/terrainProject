@@ -318,7 +318,7 @@ async function main() {
 	const mat_view = mat4.create();
 	const mat_mvp = mat4.create();
 
-	const light_position_world_start = [-15, 0, 0];
+	const light_position_world_start = [-100, 0, 0];
 
 	const light_position_cam = [0, 0, 0, 0];
 
@@ -363,8 +363,8 @@ async function main() {
 		const sky_blue_color = [135/255, 206/255, 235/255, 1];
 		const night_black_color = [7/255, 11/255, 52/255, 1];
 
-		const normalized_light_posiiton_world = vec3.normalize(vec3.create(), light_position_world);
-		const angle = Math.acos(vec3.dot(normalized_light_posiiton_world, [0,0,1]));
+		const normalized_light_position_world = vec3.normalize(vec3.create(), light_position_world);
+		const angle = Math.acos(vec3.dot(normalized_light_position_world, [0,0,1]));
 
 		let color;
 		if (angle < Math.PI/2){
