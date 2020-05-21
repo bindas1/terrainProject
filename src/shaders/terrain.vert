@@ -40,14 +40,12 @@ void main()
     float t = sim_time*2.;
     float water_level = -4.5;
 
-   
-    
     //anplitude
     float amplitude = 15.;
     //here must mutliply by size of 1/terrain and add 0.5!!
     vec2 scaled_positions = vec2(position_v4.x*0.01+0.5, position_v4.y*0.01+0.5);
     position_v4.z = length(texture2D(height_map, scaled_positions).rgb)*amplitude - amplitude;
-    
+
     float gx = position_v4.x;
     float gy = position_v4.y;
 
@@ -71,7 +69,7 @@ void main()
     newNormal = normalize(vec3(-(h_xdx11 - h_xdx12) / (2. / 500.), //500 = grid width (TODO make uniform variable for this)
                                -(h_xdx21 - h_xdx22) / (2. / 300.), //200= grid height do same as for grid width
                                 1.));
-    
+
     if(position_v4.z <= water_level) {
          // simulate little waves on water
         vec2 uv = vec2(position_v4.x, position_v4.y);
@@ -93,8 +91,6 @@ void main()
     v2f_height = position_v4.z; //update height for frag
     position_in_light_view = (mat_model_view_light * position_v4).xyz;
 
-  
-
     vec3 vector_view_to_posn = (mat_model_view * position_v4).xyz;
 
     // direction view to position in cam coordinate
@@ -102,7 +98,9 @@ void main()
     v2f_dir_from_view_not_normalized = vector_view_to_posn;
 
     //direction position to light source in cam coordinate
-    v2f_dir_to_light = light_position.rgb - vector_view_to_posn;
+    //since light is at infinite, we only care about the direction.
+    //dircetion is 000 -> light posn in world view = light posn in world view ~= light posn in camera view
+    v2f_dir_to_light = light_position.rgb;
 
     // transform normal to camera coordinates
     v2f_normal = normalize(mat_normals * newNormal); //n

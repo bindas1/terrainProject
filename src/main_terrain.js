@@ -27,15 +27,11 @@ async function main() {
 	const canvas_elem = document.getElementsByTagName('canvas')[0];
 	const debug_text = document.getElementById('debug-text');
 
-	let update_needed = true;
-
 	{
 		// Resize canvas to fit the window, but keep it square.
 		function resize_canvas() {
 			canvas_elem.width = window.innerWidth;
 			canvas_elem.height = window.innerHeight;
-
-			update_needed = true;
 		}
 		resize_canvas();
 		window.addEventListener('resize', resize_canvas);
@@ -64,6 +60,8 @@ async function main() {
 		'sun': load_texture(regl, './textures/sun.jpg'),
 		'shader_shadowmap_gen_vert': load_text('./src/shaders/shadowmap_gen.vert'), //for shadowmap
 		'shader_shadowmap_gen_frag': load_text('./src/shaders/shadowmap_gen.frag'),
+		'shader_vis_vert': load_text('./src/shaders/cubemap_visualization.vert'),
+		'shader_vis_frag': load_text('./src/shaders/cubemap_visualization.frag'),
 	};
 
 	[
@@ -124,7 +122,7 @@ async function main() {
 		Camera
 	---------------------------------------------------------------*/
 	const mat_world_to_cam = mat4.create();
-	const cam_distance_base = 5.75;
+	const cam_distance_base = 0.75;
 
 	let cam_angle_z = -0.5; // in radians!
 	let cam_angle_y = -0.42; // in radians!
@@ -187,7 +185,6 @@ async function main() {
 				cam_angle_y += -event.movementY*0.005;
 			}
 			update_cam_transform();
-			update_needed = true;
 		}
 
 	});
@@ -201,7 +198,6 @@ async function main() {
 		// console.log('wheel', event.deltaY, event.deltaMode);
 		event.preventDefault(); // don't scroll the page too...
 		update_cam_transform();
-		update_needed = true;
 	})
 
 	let speed = 0.1;
@@ -213,9 +209,8 @@ async function main() {
 
 		mouse_offset[0] += x_offset * speed;
 		mouse_offset[1] += y_offset * speed;
-		
+
 		//mouse_offset[0] += 0.1;
-		update_needed = true;
 	})
 
 	// up
@@ -227,9 +222,7 @@ async function main() {
 		mouse_offset[1] += y_offset * speed;
 
 		// for 0 degrees
-		// mouse_offset[0] -= 0.1; 
-		
-		update_needed = true;
+		// mouse_offset[0] -= 0.1;
 	})
 
 	// right
@@ -239,8 +232,6 @@ async function main() {
 
 		mouse_offset[1] += x_offset * speed;
 		mouse_offset[0] += y_offset * speed;
-
-		update_needed = true;
 	})
 
 	// left
@@ -251,7 +242,6 @@ async function main() {
 
 		mouse_offset[1] += x_offset * speed;
 		mouse_offset[0] += y_offset * speed;
-		update_needed = true;
 	})
 
 
@@ -285,32 +275,33 @@ async function main() {
 		debug_overlay.classList.toggle('hide');
 	})
 
+	let is_paused = false;
+	let sim_time = 0;
+	let prev_regl_time = 0;
+	register_keyboard_action('p', () => is_paused = !is_paused);
+
+	let show_shadowmap_debug = false;
+	register_keyboard_action('h', () => show_shadowmap_debug = !show_shadowmap_debug);
 
 	function activate_preset_view() {
+		is_paused = true;
 		cam_angle_z = -1.0;
 		cam_angle_y = -0.42;
 		cam_distance_factor = 1.0;
 		cam_target = [0, 0, 0];
 
 		update_cam_transform();
-		update_needed = true;
 	}
 	activate_preset_view();
 
 	document.getElementById('btn-preset-view').addEventListener('click', activate_preset_view);
 	register_keyboard_action('c', activate_preset_view);
 
-	function calculate_actor_to_world_transform(actor, translation) {
-		const mat_trans = mat4.fromTranslation(mat4.create(), translation)
-		const mat_scale = mat4.fromScaling(mat4.create(), [actor.size, actor.size, actor.size])
-		mat4_matmul_many(actor.mat_model_to_world, mat_trans, mat_scale);
-	}
-
 	const actors_by_name = {
 		sun: {
 			orbits: null,
 			texture: resources.sun,
-			size: 0.5,
+			size: 0.1,
 			rotation_speed: 0.1,
 		},
 	}
@@ -329,68 +320,85 @@ async function main() {
 	const mat_projection = mat4.create();
 	const mat_view = mat4.create();
 	const mat_mvp = mat4.create();
-	let sim_time = 0;
-	let prev_regl_time = 0;
-	// let light_position_world = [0, 0, 0, 1.0];
-	let light_position_world = [1, 80., 10., 1.0];
 
-	let is_paused = false;
-
-
+	const light_position_world_start = [-100, 0, 0];
 
 	const light_position_cam = [0, 0, 0, 0];
 
 	regl.frame((frame) => {
-		/*if (! is_paused) {
+		if (! is_paused) {
 			const dt = frame.time - prev_regl_time;
 			sim_time += dt;
 		}
-		prev_regl_time = frame.time;*/
-		sim_time = frame.time;
-		
-		update_needed = true;
-		if(update_needed) {
-			update_needed = false; // do this *before* running the drawing code so we don't keep updating if drawing throws an error.
-			regl.clear({color: [0.6, 0.8, 1., 1]});
-			mat4.perspective(mat_projection,
-				deg_to_rad * 60, // fov y
-				frame.framebufferWidth / frame.framebufferHeight, // aspect ratio
-				0.01, // near
-				100, // far
-			)
+		prev_regl_time = frame.time;
 
-			texture_fbm.draw_texture_to_buffer({width: 500, height: 300, mouse_offset, zoom_factor: 2.});
-			//texture_fbm.draw_buffer_to_screen();
+		regl.clear({color: [0.6, 0.8, 1., 1]});
 
-			mat4.copy(mat_view, mat_world_to_cam);
+		const light_position_world = vec3.rotateY(vec3.create(), light_position_world_start, [0,0,0], sim_time*0.3).concat(1);
 
-			// Calculate light position in camera frame
-			vec4.transformMat4(light_position_cam, light_position_world, mat_view);
+		mat4.perspective(mat_projection,
+			deg_to_rad * 60, // fov y
+			frame.framebufferWidth / frame.framebufferHeight, // aspect ratio
+			0.01, // near
+			100, // far
+		)
 
-			const scene_info = {
-				mat_view:        mat_view,
-				mat_projection:  mat_projection,
-				light_position_world: light_position_world,
-				light_position_cam: light_position_cam,
-				sim_time:        sim_time,
-			}
+		texture_fbm.draw_texture_to_buffer({width: 500, height: 300, mouse_offset, zoom_factor: 2.});
+		//texture_fbm.draw_buffer_to_screen();
 
+		mat4.copy(mat_view, mat_world_to_cam);
 
-			//terrain_actor.render_shadowmap(scene_info);
-			terrain_actor.draw_phong_contribution(scene_info);
+		// Calculate light position in camera frame
+		vec4.transformMat4(light_position_cam, light_position_world, mat_view);
 
-			for (const actor of actors_list) {
-				calculate_actor_to_world_transform(actor, light_position_world.slice(0,3));
+		const scene_info = {
+			mat_view:        mat_view,
+			mat_projection:  mat_projection,
+			light_position_world: light_position_world,
+			light_position_cam: light_position_cam,
+			sim_time:        sim_time,
+		}
 
-				mat4_matmul_many(mat_mvp, mat_projection, mat_world_to_cam, actor.mat_model_to_world)
+		// Set background color
+		// const sunset_red_color = [1, 60/255, 60/255, 1];
+		// const sunset_orange_color = [253/255, 94/255, 83/255,1];
+		const sunset_pink_color = [246/255, 114/255, 128/255, 1];
+		const sky_blue_color = [135/255, 206/255, 235/255, 1];
+		const night_black_color = [7/255, 11/255, 52/255, 1];
 
-				draw_sphere({
-					mat_mvp: mat_mvp,
-					tex_base_color: actor.texture,
-				});
-				// for better performance we should collect these props and then draw them all together
-				// http://regl.party/api#batch-rendering
-			}
+		const normalized_light_position_world = vec3.normalize(vec3.create(), light_position_world);
+		const angle = Math.acos(vec3.dot(normalized_light_position_world, [0,0,1]));
+
+		let color;
+		if (angle < Math.PI/2){
+			const val_btw_zero_and_one = 2*angle/Math.PI; //angle is between 0 and pi/2. so divide by pi/2 to get btw 0->1
+			color = vec4.lerp(vec4.create(), sky_blue_color, sunset_pink_color, Math.exp(1-1/Math.pow(val_btw_zero_and_one, 2)));
+		} else {
+			const val_btw_zero_and_one = 2*(Math.PI - angle)/Math.PI; //angle is btw pi/2 and pi. so I do pi - angle to get it btwn 0 and pi/2 and do like above
+			color = vec4.lerp(vec4.create(), night_black_color, sunset_pink_color, Math.exp(1-1/Math.pow(val_btw_zero_and_one, 2)));
+		}
+		regl.clear({color: color});
+
+		terrain_actor.render_shadowmap(scene_info);
+		terrain_actor.draw_phong_contribution(scene_info);
+		if (show_shadowmap_debug){
+			terrain_actor.visualize_distance_map();
+		}
+
+		for (const actor of actors_list) {
+			const mat_trans = mat4.fromTranslation(mat4.create(), light_position_world)
+
+			const mat_scale = mat4.fromScaling(mat4.create(), [actor.size, actor.size, actor.size])
+			mat4_matmul_many(actor.mat_model_to_world, mat_trans, mat_scale);
+
+			mat4_matmul_many(mat_mvp, mat_projection, mat_view, actor.mat_model_to_world)
+
+			draw_sphere({
+				mat_mvp: mat_mvp,
+				tex_base_color: actor.texture,
+			});
+			// for better performance we should collect these props and then draw them all together
+			// http://regl.party/api#batch-rendering
 		}
 
 		debug_text.textContent = `
