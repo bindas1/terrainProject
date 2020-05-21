@@ -280,6 +280,9 @@ async function main() {
 	let prev_regl_time = 0;
 	register_keyboard_action('p', () => is_paused = !is_paused);
 
+	let show_shadowmap_debug = false;
+	register_keyboard_action('h', () => show_shadowmap_debug = !show_shadowmap_debug);
+
 	function activate_preset_view() {
 		is_paused = true;
 		cam_angle_z = -1.0;
@@ -378,7 +381,9 @@ async function main() {
 
 		terrain_actor.render_shadowmap(scene_info);
 		terrain_actor.draw_phong_contribution(scene_info);
-		terrain_actor.visualize_distance_map();
+		if (show_shadowmap_debug){
+			terrain_actor.visualize_distance_map();
+		}
 
 		for (const actor of actors_list) {
 			const mat_trans = mat4.fromTranslation(mat4.create(), light_position_world)
