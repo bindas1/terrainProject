@@ -99,7 +99,8 @@ function terrain_build_mesh(height_map) {
 
 function init_terrain(regl, resources, height_map_buffer) {
 
-	const terrain_mesh = terrain_build_mesh(new BufferData(regl, height_map_buffer));
+	// const terrain_mesh = terrain_build_mesh(new BufferData(regl, height_map_buffer));
+	const terrain_mesh = resources.terrain_with_different_resolution
 
 	const shadowmap = regl.framebuffer({
 		radius:      1024,

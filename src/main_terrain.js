@@ -68,6 +68,7 @@ async function main() {
 		// 	mat_screen:       [0.31, 0.84, 0.42],
 		// }),
 		'mesh_scene': load_mesh_obj(regl, './meshes/shadow_scene_1.obj'),
+		'terrain_with_different_resolution': load_mesh_obj(regl, './meshes/FirstTerrain.obj'),
 	};
 
 	[
