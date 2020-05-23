@@ -69,6 +69,10 @@ async function main() {
 		// }),
 		'mesh_scene': load_mesh_obj(regl, './meshes/shadow_scene_1.obj'),
 		'terrain_with_different_resolution': load_mesh_obj(regl, './meshes/FirstTerrain.obj'),
+		'new_terrain': load_mesh_obj(regl, './meshes/NewTerrain.obj'),
+		'new_terrain_2': load_mesh_obj(regl, './meshes/NewTerrain2.obj'),
+		'new_terrain_3': load_mesh_obj(regl, './meshes/NewTerrain3.obj'),
+		'new_terrain_4': load_mesh_obj(regl, './meshes/NewTerrain4.obj'),
 	};
 
 	[

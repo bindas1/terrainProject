@@ -40,35 +40,35 @@ void main()
     float t = sim_time*2.;
     float water_level = -4.5;
 
-    //anplitude
-    float amplitude = 15.;
-    //here must mutliply by size of 1/terrain and add 0.5!!
-    vec2 scaled_positions = vec2(position_v4.x*0.01+0.5, position_v4.y*0.01+0.5);
-    position_v4.z = length(texture2D(height_map, scaled_positions).rgb)*amplitude - amplitude;
+    // //anplitude
+    // float amplitude = 15.;
+    // //here must mutliply by size of 1/terrain and add 0.5!!
+    // vec2 scaled_positions = vec2(position_v4.x*0.01+0.5, position_v4.y*0.01+0.5);
+    // position_v4.z = length(texture2D(height_map, scaled_positions).rgb)*amplitude - amplitude;
 
-    float gx = position_v4.x;
-    float gy = position_v4.y;
+    // float gx = position_v4.x;
+    // float gy = position_v4.y;
 
-    vec2 spos = vec2((gx+1.)*0.01+0.5, gy*0.01+0.5);
-    float h_xdx11 =  length(texture2D(height_map, spos).rgb)*amplitude - amplitude;
+    // vec2 spos = vec2((gx+1.)*0.01+0.5, gy*0.01+0.5);
+    // float h_xdx11 =  length(texture2D(height_map, spos).rgb)*amplitude - amplitude;
 
-    spos = vec2((gx-1.)*0.01+0.5, gy*0.01+0.5);
-    float h_xdx12 =  length(texture2D(height_map, spos).rgb)*amplitude - amplitude;
+    // spos = vec2((gx-1.)*0.01+0.5, gy*0.01+0.5);
+    // float h_xdx12 =  length(texture2D(height_map, spos).rgb)*amplitude - amplitude;
 
-    spos = vec2((gx)*0.01+0.5, (gy+ 1.)*0.01+0.5);
-    float h_xdx21 =  length(texture2D(height_map, spos).rgb)*amplitude - amplitude;
+    // spos = vec2((gx)*0.01+0.5, (gy+ 1.)*0.01+0.5);
+    // float h_xdx21 =  length(texture2D(height_map, spos).rgb)*amplitude - amplitude;
 
-    spos = vec2((gx-1.)*0.01+0.5, (gy-1.)*0.01+0.5);
-    float h_xdx22 =  length(texture2D(height_map, spos).rgb)*amplitude - amplitude;
-    //compute normals for terrain(TODO still need to add the normals for the waves)
-    // dz/dx = (h(x+dx) - h(x-dx)) / (2 dx)
+    // spos = vec2((gx-1.)*0.01+0.5, (gy-1.)*0.01+0.5);
+    // float h_xdx22 =  length(texture2D(height_map, spos).rgb)*amplitude - amplitude;
+    // //compute normals for terrain(TODO still need to add the normals for the waves)
+    // // dz/dx = (h(x+dx) - h(x-dx)) / (2 dx)
 
 
-    //i think the values 500, 300 suppose are the values given in main_terrain when we draw texture to buffer
-    //texture_fbm.draw_texture_to_buffer({width: 500, height: 300, mouse_offset, zoom_factor: 2.});
-    newNormal = normalize(vec3(-(h_xdx11 - h_xdx12) / (2. / 500.), //500 = grid width (TODO make uniform variable for this)
-                               -(h_xdx21 - h_xdx22) / (2. / 300.), //200= grid height do same as for grid width
-                                1.));
+    // //i think the values 500, 300 suppose are the values given in main_terrain when we draw texture to buffer
+    // //texture_fbm.draw_texture_to_buffer({width: 500, height: 300, mouse_offset, zoom_factor: 2.});
+    // newNormal = normalize(vec3(-(h_xdx11 - h_xdx12) / (2. / 500.), //500 = grid width (TODO make uniform variable for this)
+    //                            -(h_xdx21 - h_xdx22) / (2. / 300.), //200= grid height do same as for grid width
+    //                             1.));
 
     if(position_v4.z <= water_level) {
          // simulate little waves on water
