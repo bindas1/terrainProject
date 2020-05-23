@@ -62,6 +62,12 @@ async function main() {
 		'shader_shadowmap_gen_frag': load_text('./src/shaders/shadowmap_gen.frag'),
 		'shader_vis_vert': load_text('./src/shaders/cubemap_visualization.vert'),
 		'shader_vis_frag': load_text('./src/shaders/cubemap_visualization.frag'),
+		// 'mesh_terrain': load_mesh_obj(regl, './meshes/shadow_scene__terrain.obj', {
+		// 	mat_architecture: [0.79, 0.41, 0.31],
+		// 	mat_terrain:      [0.90, 0.70, 0.40],
+		// 	mat_screen:       [0.31, 0.84, 0.42],
+		// }),
+		'mesh_scene': load_mesh_obj(regl, './meshes/shadow_scene_1.obj'),
 	};
 
 	[
