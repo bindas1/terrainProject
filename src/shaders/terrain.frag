@@ -83,7 +83,7 @@ void main()
 		if (dotNL > 0.0){
 			color += light_color * material_color * dotNL;
 			if (dot(v, r) > 0.0){
-				color += light_color * material_color * pow(dot(r,v), shininess);
+				//color += light_color * material_color * pow(dot(r,v), shininess);
 			}
 		}
 	//}

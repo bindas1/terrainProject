@@ -72,7 +72,7 @@ async function main() {
 		'new_terrain': load_mesh_obj(regl, './meshes/NewTerrain.obj'),
 		'new_terrain_2': load_mesh_obj(regl, './meshes/NewTerrain2.obj'),
 		'new_terrain_3': load_mesh_obj(regl, './meshes/NewTerrain3.obj'),
-		'new_terrain_4': load_mesh_obj(regl, './meshes/NewTerrain4.obj'),
+		'new_terrain_4': load_mesh_obj(regl, './meshes/newTerrain7.obj'),
 	};
 
 	[
@@ -354,7 +354,7 @@ async function main() {
 			100, // far
 		)
 
-		texture_fbm.draw_texture_to_buffer({width: 500, height: 300, mouse_offset, zoom_factor: 2.});
+		texture_fbm.draw_texture_to_buffer({width: 3000, height: 1000, mouse_offset, zoom_factor: 10.});
 		//texture_fbm.draw_buffer_to_screen();
 
 		mat4.copy(mat_view, mat_world_to_cam);
