@@ -40,38 +40,34 @@ void main()
     float t = sim_time*2.;
     float water_level = -4.5;
 
-   
-    
-    //anplitude
-    float amplitude = 15.;
-    //here must mutliply by size of 1/terrain and add 0.5!!
-    vec2 scaled_positions = vec2(position_v4.x*0.01+0.5, position_v4.y*0.01+0.5);
-    position_v4.z = length(texture2D(height_map, scaled_positions).rgb)*amplitude - amplitude;
-    
+    float shift_down = 0.5;
+    float amplitude = 1.;  //scaling of the sampled height to avoid to extreme values, or increase extreme values
+    float terrain_size = 20.; //indicates size of  terrain, so we can shrink the x,y down using this value back to values between [0,1]
+    float reverse_terrain_size = 1./terrain_size;
+    float delta_xy = terrain_size/100.; //not sure what to pick for the delta value !!!!!!!!!!!!! 
+    vec2 scaled_positions = vec2(position_v4.x*reverse_terrain_size+0.5, position_v4.y*reverse_terrain_size+0.5);
+    position_v4.z = length(texture2D(height_map, scaled_positions).rgb) - 0.5;
+
     float gx = position_v4.x;
     float gy = position_v4.y;
 
-    vec2 spos = vec2((gx+1.)*0.01+0.5, gy*0.01+0.5);
-    float h_xdx11 =  length(texture2D(height_map, spos).rgb)*amplitude - amplitude;
+    vec2 spos = vec2((gx+delta_xy)*reverse_terrain_size+0.5, gy*reverse_terrain_size+0.5);
+    float h_xdx11 =  length(texture2D(height_map, spos).rgb);
 
-    spos = vec2((gx-1.)*0.01+0.5, gy*0.01+0.5);
-    float h_xdx12 =  length(texture2D(height_map, spos).rgb)*amplitude - amplitude;
+    spos = vec2((gx-delta_xy)*reverse_terrain_size+0.5, gy*reverse_terrain_size+0.5);
+    float h_xdx12 =  length(texture2D(height_map, spos).rgb);
 
-    spos = vec2((gx)*0.01+0.5, (gy+ 1.)*0.01+0.5);
-    float h_xdx21 =  length(texture2D(height_map, spos).rgb)*amplitude - amplitude;
+    spos = vec2((gx)*reverse_terrain_size+0.5, (gy+ delta_xy)*reverse_terrain_size+0.5);
+    float h_xdx21 =  length(texture2D(height_map, spos).rgb);
 
-    spos = vec2((gx-1.)*0.01+0.5, (gy-1.)*0.01+0.5);
-    float h_xdx22 =  length(texture2D(height_map, spos).rgb)*amplitude - amplitude;
+    spos = vec2((gx-delta_xy)*reverse_terrain_size+0.5, (gy-delta_xy)*reverse_terrain_size+0.5);
+    float h_xdx22 =  length(texture2D(height_map, spos).rgb);
     //compute normals for terrain(TODO still need to add the normals for the waves)
     // dz/dx = (h(x+dx) - h(x-dx)) / (2 dx)
 
-
-    //i think the values 500, 300 suppose are the values given in main_terrain when we draw texture to buffer
-    //texture_fbm.draw_texture_to_buffer({width: 500, height: 300, mouse_offset, zoom_factor: 2.});
     newNormal = normalize(vec3(-(h_xdx11 - h_xdx12) / (2. / 500.), //500 = grid width (TODO make uniform variable for this)
                                -(h_xdx21 - h_xdx22) / (2. / 300.), //200= grid height do same as for grid width
                                 1.));
-    
     if(position_v4.z <= water_level) {
          // simulate little waves on water
         vec2 uv = vec2(position_v4.x, position_v4.y);
@@ -93,8 +89,6 @@ void main()
     v2f_height = position_v4.z; //update height for frag
     position_in_light_view = (mat_model_view_light * position_v4).xyz;
 
-  
-
     vec3 vector_view_to_posn = (mat_model_view * position_v4).xyz;
 
     // direction view to position in cam coordinate
@@ -102,7 +96,9 @@ void main()
     v2f_dir_from_view_not_normalized = vector_view_to_posn;
 
     //direction position to light source in cam coordinate
-    v2f_dir_to_light = light_position.rgb - vector_view_to_posn;
+    //since light is at infinite, we only care about the direction.
+    //dircetion is 000 -> light posn in world view = light posn in world view ~= light posn in camera view
+    v2f_dir_to_light = light_position.rgb;
 
     // transform normal to camera coordinates
     v2f_normal = normalize(mat_normals * newNormal); //n

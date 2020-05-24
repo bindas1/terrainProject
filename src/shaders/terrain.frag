@@ -12,6 +12,7 @@ uniform vec4 light_position; //in camera space coordinates already
 uniform sampler2D shadowmap;
 
 const vec3  light_color = vec3(1.0, 0.941, 0.898);
+
 // Small perturbation to prevent "z-fighting" on the water on some machines...
 const float terrain_water_level    = -4.5+0.8 + 1e-6;
 const vec3  terrain_color_water    = vec3(0.29, 0.51, 0.62);
@@ -55,7 +56,7 @@ void main()
 		material_color = terrain_color_water;
 		shininess = 8.0;
 	} else {
-		//divide by terrain size 
+		//divide by terrain size
 		float weight = (height - terrain_water_level)/50.;
     	material_color = mix(terrain_color_grass, terrain_color_mountain, weight);
 	}
@@ -68,18 +69,21 @@ void main()
 	vec3 l = normalize(v2f_dir_to_light);
 	float dotNL = dot(l,n);
 
-	vec3 r = 2.0 * dotNL * n - l;
+	vec3 r = normalize(2.0 * dotNL * n - l);
 	vec3 v = -normalize(v2f_dir_from_view);
 
 	vec2 position_in_texture = (position_in_light_view.xy + 1.0) * 0.5; //to convert 0->1 to -1->1
 
-	//float dist_light_and_first_posn_in_shadow_map = texture2D(shadowmap, position_in_texture).r;
+	// float dist_light_and_first_posn_in_shadow_map = texture2D(shadowmap, position_in_texture).r;
+	// vec3 up_vector_in_camera_view = normalize(mat_normals * vec3(0,0,1));
 
-	//if (-1.0 * position_in_light_view.z < 1.01 * dist_light_and_first_posn_in_shadow_map) {
+	// if (-1.0 * position_in_light_view.z < 1.1 * dist_light_and_first_posn_in_shadow_map && dot(up_vector_in_camera_view, v2f_dir_to_light) > 0.0) {
+	// if (-1.0 * position_in_light_view.z < 1.1 * dist_light_and_first_posn_in_shadow_map) {
+	// if (dot(up_vector_in_camera_view, v2f_dir_to_light) > 0.0){
 		if (dotNL > 0.0){
 			color += light_color * material_color * dotNL;
 			if (dot(v, r) > 0.0){
-				color += light_color * material_color * pow(dot(r,v), shininess);
+				//color += light_color * material_color * pow(dot(r,v), shininess);
 			}
 		}
 	//}

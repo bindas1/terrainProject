@@ -17,7 +17,7 @@ const DOM_loaded_promise = new Promise((accept, reject) => {
 	} else {  // `DOMContentLoaded` has already fired
 		accept();
 	}
-}); 
+});
 
 function async_timeout(time_s) {
 	return new Promise(resolve => setTimeout(resolve, time_s*1000));
@@ -52,7 +52,7 @@ async function load_texture(regl_instance, img_url, tex_options) {
 		data: img,
 		// when sampling the texture, use linear interpolation not just the nearest pixel
 		mag: 'linear',
-		min: 'linear', 
+		min: 'linear',
 	}, tex_options))
 }
 
@@ -72,7 +72,7 @@ async function load_mesh_obj(regl_instance, url, material_colors_by_name) {
 	const mesh_loaded_obj = new OBJ.Mesh(obj_data);
 
 	const faces_from_materials = [].concat(...mesh_loaded_obj.indicesPerMaterial);
-	
+
 	let vertex_colors = null;
 
 	if(material_colors_by_name) {
@@ -97,10 +97,10 @@ async function load_mesh_obj(regl_instance, url, material_colors_by_name) {
 		vertex_positions: regl_instance.buffer(mesh_loaded_obj.vertices),
 		vertex_tex_coords: regl_instance.buffer(mesh_loaded_obj.textures),
 		vertex_normals: regl_instance.buffer(mesh_loaded_obj.vertexNormals),
-		
+
 		// https://github.com/regl-project/regl/blob/master/API.md#elements
 		faces: regl_instance.elements({data: faces_from_materials, type: 'uint16'}),
-		
+
 		vertex_color: vertex_colors,
 
 		lib_obj: mesh_loaded_obj,
@@ -125,7 +125,7 @@ DOM_loaded_promise.then(() => {
 
 		/*
 		const modifiers = [];
-		
+
 		if(event.ctrlKey) {
 			modifiers.push('Ctrl');
 		}
@@ -159,4 +159,3 @@ function register_keyboard_action(key, func) {
 	keyboard_actions[key] = handlers;
 	handlers.push(func);
 }
-

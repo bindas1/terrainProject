@@ -99,7 +99,8 @@ function terrain_build_mesh(height_map) {
 
 function init_terrain(regl, resources, height_map_buffer) {
 
-	const terrain_mesh = terrain_build_mesh(new BufferData(regl, height_map_buffer));
+	// const terrain_mesh = terrain_build_mesh(new BufferData(regl, height_map_buffer));
+	const terrain_mesh = resources.new_terrain_4
 
 	const shadowmap = regl.framebuffer({
 		radius:      1024,
@@ -147,6 +148,37 @@ function init_terrain(regl, resources, height_map_buffer) {
 		vert: resources['shaders/terrain.vert'],
 		frag: resources['shaders/terrain.frag'],
 	});
+
+	const flattened_cubemap_pipeline = regl({
+    attributes: {
+      position: [
+        [0., 0.],
+        [1., 0.],
+        [1., 1.],
+        [0., 1.],
+      ],
+    },
+    elements: [
+      [0, 1, 2], // top right
+      [0, 2, 3], // bottom left
+    ],
+    uniforms: {
+      shadowmap_to_show: shadowmap,
+      preview_rect_scale: ({viewportWidth, viewportHeight}) => {
+        const aspect_ratio = viewportWidth / viewportHeight;
+
+        const width_in_viewport_units = 0.8;
+        const heigh_in_viewport_units = 0.4 * aspect_ratio;
+
+        return [
+          width_in_viewport_units,
+          heigh_in_viewport_units,
+        ];
+      },
+    },
+    vert: resources.shader_vis_vert,
+    frag: resources.shader_vis_frag,
+  });
 
 	const light_projection = mat4.ortho(mat4.create(), -1.0, 1.0, -1.0, 1.0, 0.1, 100)
 
@@ -200,6 +232,10 @@ function init_terrain(regl, resources, height_map_buffer) {
 				sim_time: sim_time,
 				light_position: light_position_cam,
 			});
+		}
+
+		visualize_distance_map() {
+			flattened_cubemap_pipeline();
 		}
 	}
 
