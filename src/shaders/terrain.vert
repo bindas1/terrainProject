@@ -38,13 +38,13 @@ void main()
 
     float time = sim_time*2.;
     float t = sim_time*2.;
-    float water_level = -4.5;
+    float water_level = 0.3;
 
     float shift_down = 0.5;
     float amplitude = 1.;  //scaling of the sampled height to avoid to extreme values, or increase extreme values
     float terrain_size = 25.; //indicates size of  terrain, so we can shrink the x,y down using this value back to values between [0,1]
     float reverse_terrain_size = 1./terrain_size;
-    float delta_xy = terrain_size/100.; //not sure what to pick for the delta value !!!!!!!!!!!!! 
+    float delta_xy = 0.05; //needs to small enough to barely hit the next pixel!
     vec2 scaled_positions = vec2(position_v4.x*reverse_terrain_size+0.5, position_v4.y*reverse_terrain_size+0.5);
     position_v4.z = length(texture2D(height_map, scaled_positions).rgb) - 0.5;
 
@@ -74,7 +74,7 @@ void main()
         const float PI = 3.1415;
         float v = 5.*PI;
         float acc = 3.;
-        float amplitude = .03;
+        float amplitude = .003;
         position_v4.z = (sin((uv.x*v-time)*acc)+cos((uv.y*v-time)*acc))*amplitude*2. + water_level;
         //newNormal = normalize(vec3(amplitude*(v*acc*cos((uv.x*v-time)*acc) - acc*v*sin((uv.y*v-time)*acc)), 0., 1.));
         //position_v4.z = cos(position_v4.x*5000.+t) * sin(position_v4.y * 1000.) * 0.05 - sin(position_v4.x*1000.) * sin(position_v4.y * 1600.) * 0.05;

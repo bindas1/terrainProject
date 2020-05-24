@@ -14,7 +14,7 @@ uniform sampler2D shadowmap;
 const vec3  light_color = vec3(1.0, 0.941, 0.898);
 
 // Small perturbation to prevent "z-fighting" on the water on some machines...
-const float terrain_water_level    = -4.5+0.8 + 1e-6;
+const float terrain_water_level    = 0.3 + 0.015 + 1e-6;
 const vec3  terrain_color_water    = vec3(0.29, 0.51, 0.62);
 const vec3  terrain_color_mountain = vec3(0.8, 0.5, 0.4);
 const vec3  terrain_color_grass    = vec3(0.33, 0.43, 0.18);
