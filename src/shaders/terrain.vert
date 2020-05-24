@@ -42,7 +42,7 @@ void main()
 
     float shift_down = 0.5;
     float amplitude = 1.;  //scaling of the sampled height to avoid to extreme values, or increase extreme values
-    float terrain_size = 20.; //indicates size of  terrain, so we can shrink the x,y down using this value back to values between [0,1]
+    float terrain_size = 25.; //indicates size of  terrain, so we can shrink the x,y down using this value back to values between [0,1]
     float reverse_terrain_size = 1./terrain_size;
     float delta_xy = terrain_size/100.; //not sure what to pick for the delta value !!!!!!!!!!!!! 
     vec2 scaled_positions = vec2(position_v4.x*reverse_terrain_size+0.5, position_v4.y*reverse_terrain_size+0.5);

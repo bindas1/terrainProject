@@ -205,7 +205,7 @@ async function main() {
 		const factor_mul_base = 1.08;
 		const factor_mul = (event.deltaY > 0) ? factor_mul_base : 1./factor_mul_base;
 		cam_distance_factor *= factor_mul;
-		cam_distance_factor = Math.max(0.1, Math.min(cam_distance_factor, 4));
+		cam_distance_factor = Math.max(0.5, Math.min(cam_distance_factor, 1.5));
 		// console.log('wheel', event.deltaY, event.deltaMode);
 		event.preventDefault(); // don't scroll the page too...
 		update_cam_transform();
@@ -354,7 +354,7 @@ async function main() {
 			100, // far
 		)
 
-		texture_fbm.draw_texture_to_buffer({width: 3000, height: 1000, mouse_offset, zoom_factor: 10.});
+		texture_fbm.draw_texture_to_buffer({width: 4000, height: 2000, mouse_offset, zoom_factor: 10.});
 		//texture_fbm.draw_buffer_to_screen();
 
 		mat4.copy(mat_view, mat_world_to_cam);
