@@ -65,8 +65,8 @@ void main()
     //compute normals for terrain(TODO still need to add the normals for the waves)
     // dz/dx = (h(x+dx) - h(x-dx)) / (2 dx)
 
-    newNormal = normalize(vec3(-(h_xdx11 - h_xdx12) / (2. / 500.), //500 = grid width (TODO make uniform variable for this)
-                               -(h_xdx21 - h_xdx22) / (2. / 300.), //200= grid height do same as for grid width
+    newNormal = normalize(vec3(-(h_xdx11 - h_xdx12) / (2./terrain_size),
+                               -(h_xdx21 - h_xdx22) / (2./terrain_size),
                                 1.));
     if(position_v4.z <= water_level) {
          // simulate little waves on water
