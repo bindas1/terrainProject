@@ -37,7 +37,7 @@ void main()
 	 		shininess = 0.5
 	*/
 	vec3 material_color = terrain_color_grass;
-	float shininess = 0.1;
+	float shininess = 0.5;
 
 	/* TODO 3.2: apply the phong lighting model
     	Implement the Phong shading model by using the passed variables and write the resulting color to `color`.
@@ -83,7 +83,7 @@ void main()
 		if (dotNL > 0.0){
 			color += light_color * material_color * dotNL;
 			if (dot(v, r) > 0.0){
-				//color += light_color * material_color * pow(dot(r,v), shininess);
+				color += light_color * material_color * pow(dot(r,v), shininess);
 			}
 		}
 	//}
