@@ -194,93 +194,9 @@ float perlin_fbm(vec2 point) {
     return fbm;
 }
 
-vec3 tex_fbm(vec2 point) {
-	// Visualize noise as a vec3 color
-	float noise_val = perlin_fbm(point) + 0.5;
-	return vec3(noise_val);
-}
-
 vec3 tex_fbm_for_terrain(vec2 point) {
 	// scale by 0.25 for a reasonably shaped terrain
 	// the +0.5 transforms it to 0..1 range - for the case of writing it to a non-float textures on older browsers or GLES3
 	float noise_val = (perlin_fbm(point) * 0.25) + 0.5;
 	return vec3(noise_val);
-}
-
-// ==============================================================
-// 2D turbulence
-
-float turbulence(vec2 point) {
-    /* TODO 4.3
-    Implement the 2D turbulence function as described in the handout.
-    Again, you should use num_octaves, freq_multiplier, and ampl_multiplier.
-    */
-    float fbm = 0.0;
-    for(int i = 0; i < num_octaves; i++) {
-        float w1i = pow(freq_multiplier, float(i));
-        fbm += pow(ampl_multiplier, float(i)) * abs(perlin_noise(vec2(point.x * w1i, point.y * w1i)));
-    }
-
-    return fbm;
-}
-
-vec3 tex_turbulence(vec2 point) {
-	// Visualize noise as a vec3 color
-	float noise_val = turbulence(point);
-	return vec3(noise_val);
-}
-
-// ==============================================================
-// Procedural "map" texture
-
-const float terrain_water_level = -0.075;
-const vec3 terrain_color_water = vec3(0.29, 0.51, 0.62);
-const vec3 terrain_color_grass = vec3(0.43, 0.53, 0.23);
-const vec3 terrain_color_mountain = vec3(0.8, 0.7, 0.7);
-
-vec3 tex_map(vec2 point) {
-	/* TODO 5.1.1
-	Implement your map texture evaluation routine as described in the handout.
-	You will need to use your perlin_fbm routine and the terrain color constants described above.
-	*/
-	float noise_val = perlin_fbm(point);
-	if(noise_val < terrain_water_level) {
-		return terrain_color_water;
-	}
-
-	return mix(terrain_color_grass, terrain_color_mountain, noise_val - terrain_water_level);
-}
-
-// ==============================================================
-// Procedural "wood" texture
-
-const vec3 brown_dark 	= vec3(0.48, 0.29, 0.00);
-const vec3 brown_light 	= vec3(0.90, 0.82, 0.62);
-
-vec3 tex_wood(vec2 point) {
-	/* TODO 5.1.2
-	Implement your wood texture evaluation routine as described in thE handout.
-	You will need to use your 2d turbulence routine and the wood color constants described above.
-	*/
-
-	float n_p = length(point);
-	//float alpha = 0.5*(1. + sin(100.*(abs(n_p) + 0.15 * turbulence(point))));
-	float alpha = 0.5*(1. + sin(100.*(abs(n_p) + 0.15 * turbulence(point))));
-	return mix(brown_dark, brown_light, alpha);
-}
-
-
-// ==============================================================
-// Procedural "marble" texture
-
-const vec3 white 			= vec3(0.95, 0.95, 0.95);
-
-vec3 tex_marble(vec2 point) {
-	/* TODO 5.1.3
-	Implement your marble texture evaluation routine as described in the handout.
-	You will need to use your 2d fbm routine and the marble color constants described above.
-	*/
-	vec2 q = vec2(perlin_fbm(point), perlin_fbm(vec2(point.x + 1.7, point.y + 4.6)));
-	float alpha = 0.5*(1. + perlin_fbm(vec2(point.x + 4. * q.x, point.y + 4. * q.y)));
-	return mix(white, brown_dark, alpha);
 }
