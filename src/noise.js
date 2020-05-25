@@ -8,7 +8,7 @@ function init_noise(regl, resources) {
 
 	// Safari (at least older versions of it) does not support reading float buffers...
 	var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-	
+
 	// shared buffer to which the texture are rendered
 	const noise_buffer = regl.framebuffer({
 		width: 768,
@@ -18,7 +18,7 @@ function init_noise(regl, resources) {
 		stencil: false,
 		depth: false,
 		mag: 'linear',
-		min: 'linear', 
+		min: 'linear',
 	});
 
 	const mesh_quad_2d = {
@@ -38,12 +38,12 @@ function init_noise(regl, resources) {
 	const pipeline_generate_texture = regl({
 		attributes: {position: mesh_quad_2d.position},
 		elements: mesh_quad_2d.faces,
-		
+
 		uniforms: {
 			viewer_position: regl.prop('viewer_position'),
 			viewer_scale:    regl.prop('viewer_scale'),
 		},
-				
+
 		vert: resources['shaders/display.vert'],
 		frag: regl.prop('shader_frag'),
 
@@ -70,16 +70,16 @@ function init_noise(regl, resources) {
 
 		generate_frag_shader() {
 			return `${noise_library_code}
-		
+
 // --------------
-			
+
 varying vec2 v2f_tex_coords;
 
 void main() {
 	vec3 color = ${this.shader_func_name}(v2f_tex_coords);
 	gl_FragColor = vec4(color, 1.0);
-} 
-`;		
+}
+`;
 		}
 
 		get_buffer() {
@@ -94,7 +94,7 @@ void main() {
 
 			regl.clear({
 				framebuffer: noise_buffer,
-				color: [0, 0, 0, 1], 
+				color: [0, 0, 0, 1],
 			});
 
 			pipeline_generate_texture({
@@ -102,7 +102,7 @@ void main() {
 				viewer_position: vec2.negate([0, 0], mouse_offset),
 				viewer_scale: zoom_factor,
 			});
-			
+
 			return noise_buffer;
 		}
 
@@ -112,14 +112,6 @@ void main() {
 	}
 
 	const noise_textures = [
-		new NoiseTexture('1D plot', 'plots'),
-		new NoiseTexture('Perlin', 'tex_perlin'),
-		new NoiseTexture('FBM', 'tex_fbm'),
-		new NoiseTexture('Turbulence', 'tex_turbulence'),
-		new NoiseTexture('Map', 'tex_map'),
-		new NoiseTexture('Marble', 'tex_marble'),
-		new NoiseTexture('Wood', 'tex_wood'),
-		new NoiseTexture('Liquid', 'tex_liquid', true),
 		new NoiseTexture('FBM_for_terrain', 'tex_fbm_for_terrain', true),
 	];
 
@@ -129,7 +121,7 @@ void main() {
 
 
 
-	
+
 
 /* GLES2
 
@@ -147,7 +139,7 @@ function regl_array_uniform_workaround(uniform_name, values) {
 uniforms: Object.assign({}, {
 		viewer_position: regl.prop('viewer_position'),
 		viewer_scale: regl.prop('viewer_scale'),
-	}, 
+	},
 	regl_array_uniform_workaround('gradients', [
 		[ 1,  1],
 		[-1,  1],
@@ -164,4 +156,3 @@ uniforms: Object.assign({}, {
 	]),
 ),
 */
-
