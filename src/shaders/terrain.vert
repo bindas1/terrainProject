@@ -1,13 +1,12 @@
 attribute vec3 position;
-attribute vec3 normal;
 
 // Vertex shader computes eye-space vertex position and normals + world-space height
-varying vec3 v2f_normal; // normal vector in camera coordinates
 varying vec3 v2f_dir_to_light; // direction to light source
 varying vec3 v2f_dir_from_view; // viewing vector (from eye to vertex in view coordinates)
 varying float v2f_height;
 varying vec3 position_in_light_view; // vertex position in light coordinates
 varying vec3 v2f_dir_from_view_not_normalized;
+varying vec3 position_v3;
 
 uniform sampler2D height_map;
 uniform float sim_time;
@@ -22,8 +21,6 @@ void main()
     //TODO maybe we should wait until after changing the position_v4.z before setting the v2f_height?
     //v2f_height = position.z;
     vec4 position_v4 = vec4(position, 1);
-
-    vec3 newNormal = normal;
 
     /** TODO 3.2:
     Setup all outgoing variables so that you can compute in the fragmend shader
@@ -44,30 +41,9 @@ void main()
     float amplitude = 1.;  //scaling of the sampled height to avoid to extreme values, or increase extreme values
     float terrain_size = 25.; //indicates size of  terrain, so we can shrink the x,y down using this value back to values between [0,1]
     float reverse_terrain_size = 1./terrain_size;
-    float delta_xy = 0.05; //needs to small enough to barely hit the next pixel!
     vec2 scaled_positions = vec2(position_v4.x*reverse_terrain_size+0.5, position_v4.y*reverse_terrain_size+0.5);
     position_v4.z = length(texture2D(height_map, scaled_positions).rgb) - 0.5;
 
-    float gx = position_v4.x;
-    float gy = position_v4.y;
-
-    vec2 spos = vec2((gx+delta_xy)*reverse_terrain_size+0.5, gy*reverse_terrain_size+0.5);
-    float h_xdx11 =  length(texture2D(height_map, spos).rgb);
-
-    spos = vec2((gx-delta_xy)*reverse_terrain_size+0.5, gy*reverse_terrain_size+0.5);
-    float h_xdx12 =  length(texture2D(height_map, spos).rgb);
-
-    spos = vec2((gx)*reverse_terrain_size+0.5, (gy+ delta_xy)*reverse_terrain_size+0.5);
-    float h_xdx21 =  length(texture2D(height_map, spos).rgb);
-
-    spos = vec2((gx-delta_xy)*reverse_terrain_size+0.5, (gy-delta_xy)*reverse_terrain_size+0.5);
-    float h_xdx22 =  length(texture2D(height_map, spos).rgb);
-    //compute normals for terrain(TODO still need to add the normals for the waves)
-    // dz/dx = (h(x+dx) - h(x-dx)) / (2 dx)
-
-    newNormal = normalize(vec3(-(h_xdx11 - h_xdx12) / (2./terrain_size),
-                               -(h_xdx21 - h_xdx22) / (2./terrain_size),
-                                1.));
     if(position_v4.z <= water_level) {
          // simulate little waves on water
         vec2 uv = vec2(position_v4.x, position_v4.y);
@@ -85,6 +61,9 @@ void main()
         //position_v4.z = (cos(1600.0 * position_v4.x) * cos(800.0 * position_v4.y) * 0.024*5.);
         //newNormal = normalize(vec3(5.*38.4*sin(1600.*position_v4.x)*cos(800.*position_v4.y),0., 1.));
     }
+
+    position_v3 = position;
+
     //position vertex in light coordinate
     v2f_height = position_v4.z; //update height for frag
     position_in_light_view = (mat_model_view_light * position_v4).xyz;
@@ -100,7 +79,5 @@ void main()
     //dircetion is 000 -> light posn in world view = light posn in world view ~= light posn in camera view
     v2f_dir_to_light = light_position.rgb;
 
-    // transform normal to camera coordinates
-    v2f_normal = normalize(mat_normals * newNormal); //n
     gl_Position = mat_mvp * position_v4;
 }

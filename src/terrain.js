@@ -58,7 +58,6 @@ function init_terrain(regl, resources, height_map_buffer) {
 	const pipeline_draw_terrain = regl({
 		attributes: {
 			position: terrain_mesh.vertex_positions,
-			normal: terrain_mesh.vertex_normals,
 		},
 		uniforms: {
 			mat_mvp: regl.prop('mat_mvp'),
