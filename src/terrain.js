@@ -46,6 +46,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 		uniforms: {
 			mat_mvp:        regl.prop('mat_mvp'),
 			mat_model_view: regl.prop('mat_model_view'),
+			height_map: height_map_buffer,
 		},
 
 		vert: resources.shader_shadowmap_gen_vert,
@@ -106,7 +107,7 @@ function init_terrain(regl, resources, height_map_buffer) {
     frag: resources.shader_vis_frag,
   });
 
-	const light_projection = mat4.ortho(mat4.create(), -1.0, 1.0, -1.0, 1.0, 0.1, 100)
+	const light_projection = mat4.ortho(mat4.create(), -1.0, 1.0, -1.0, 1.0, 0.1, 1000)
 
 	class TerrainActor {
 		constructor() {
