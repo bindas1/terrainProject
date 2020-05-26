@@ -62,17 +62,7 @@ async function main() {
 		'shader_shadowmap_gen_frag': load_text('./src/shaders/shadowmap_gen.frag'),
 		'shader_vis_vert': load_text('./src/shaders/cubemap_visualization.vert'),
 		'shader_vis_frag': load_text('./src/shaders/cubemap_visualization.frag'),
-		// 'mesh_terrain': load_mesh_obj(regl, './meshes/shadow_scene__terrain.obj', {
-		// 	mat_architecture: [0.79, 0.41, 0.31],
-		// 	mat_terrain:      [0.90, 0.70, 0.40],
-		// 	mat_screen:       [0.31, 0.84, 0.42],
-		// }),
-		'mesh_scene': load_mesh_obj(regl, './meshes/shadow_scene_1.obj'),
-		'terrain_with_different_resolution': load_mesh_obj(regl, './meshes/FirstTerrain.obj'),
-		'new_terrain': load_mesh_obj(regl, './meshes/NewTerrain.obj'),
-		'new_terrain_2': load_mesh_obj(regl, './meshes/NewTerrain2.obj'),
-		'new_terrain_3': load_mesh_obj(regl, './meshes/NewTerrain3.obj'),
-		'new_terrain_4': load_mesh_obj(regl, './meshes/newTerrain7.obj'),
+		'new_terrain': load_mesh_obj(regl, './meshes/newTerrain7.obj'),
 	};
 
 	[
@@ -205,7 +195,7 @@ async function main() {
 		const factor_mul_base = 1.08;
 		const factor_mul = (event.deltaY > 0) ? factor_mul_base : 1./factor_mul_base;
 		cam_distance_factor *= factor_mul;
-		cam_distance_factor = Math.max(0.1, Math.min(cam_distance_factor, 4));
+		cam_distance_factor = Math.max(0.5, Math.min(cam_distance_factor, 1.5));
 		// console.log('wheel', event.deltaY, event.deltaMode);
 		event.preventDefault(); // don't scroll the page too...
 		update_cam_transform();
@@ -354,7 +344,7 @@ async function main() {
 			100, // far
 		)
 
-		texture_fbm.draw_texture_to_buffer({width: 3000, height: 1000, mouse_offset, zoom_factor: 10.});
+		texture_fbm.draw_texture_to_buffer({width: 3000, height: 3000, mouse_offset, zoom_factor: 10.});
 		//texture_fbm.draw_buffer_to_screen();
 
 		mat4.copy(mat_view, mat_world_to_cam);
