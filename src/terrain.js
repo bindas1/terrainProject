@@ -37,7 +37,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 
 	const pipeline_shadowmap_generation = regl({
 		attributes: {
-			position: terrain_mesh.vertex_positions,
+			position: terrain_mesh.vertex_positions
 		},
 		// Faces, as triplets of vertex indices
 		elements: terrain_mesh.faces,
@@ -46,6 +46,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 		uniforms: {
 			mat_mvp:        regl.prop('mat_mvp'),
 			mat_model_view: regl.prop('mat_model_view'),
+			height_map: height_map_buffer,
 		},
 
 		vert: resources.shader_shadowmap_gen_vert,
@@ -106,7 +107,31 @@ function init_terrain(regl, resources, height_map_buffer) {
     frag: resources.shader_vis_frag,
   });
 
-	const light_projection = mat4.ortho(mat4.create(), -1.0, 1.0, -1.0, 1.0, 0.1, 100)
+	const light_projection = mat4.ortho(mat4.create(), -5.0, 5.0, -5.0, 5.0, 10, 1000)
+
+	function create_mat_model_view_light(light_position_world, mat_model_to_world) {
+		const mat_model_view = mat4.create();
+		const mat_world_to_cam = mat4.create();
+
+		const normalize_light_position_world = vec3.normalize(vec3.create(), light_position_world)
+		let cam_angle_y = -Math.acos(vec3.dot(normalize_light_position_world, [-1,0,0]))
+		if (vec3.dot(normalize_light_position_world, [0,0,1]) < 0){
+			cam_angle_y = 2 * Math.PI - cam_angle_y
+		}
+		const mat_rotY = mat4.fromYRotation(mat4.create(), cam_angle_y)
+		const mat_trans = mat4.fromTranslation(mat4.create(), [100, 0, 0] )
+
+		// Example camera matrix, looking along forward-X, edit this
+		const look_at = mat4.lookAt(mat4.create(),
+				 [-1, 0, 0], // camera position in world coord
+				 [0, 0, 0], // view target point
+				 [0, 0, 1], // up vector
+		);
+		mat4_matmul_many(mat_world_to_cam, look_at, mat_trans, mat_rotY);
+		mat4.multiply(mat_model_view, mat_world_to_cam, mat_model_to_world);
+
+		return mat_model_view
+	}
 
 	class TerrainActor {
 		constructor() {
@@ -125,10 +150,9 @@ function init_terrain(regl, resources, height_map_buffer) {
 				framebuffer: out_buffer,
 			});
 
-			const mat_model_view = mat4.create();
-			const look_at = mat4.lookAt(mat4.create(), light_position_world, [0,0,0], [0,1,0])
-			mat4.multiply(mat_model_view, look_at, this.mat_model_to_world);
 			const mat_mvp = mat4.create();
+			const mat_model_view = create_mat_model_view_light(light_position_world, this.mat_model_to_world);
+
 			mat4_matmul_many(mat_mvp, light_projection, mat_model_view);
 
 			// Measure new distance map
@@ -147,8 +171,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 			mat3.transpose(this.mat_normals, this.mat_normals);
 			mat3.invert(this.mat_normals, this.mat_normals);
 
-			const look_at = mat4.lookAt(mat4.create(), light_position_world, [0,0,0], [0,1,0]);
-			const mat_model_view_light = mat4.multiply(mat4.create(), look_at, this.mat_model_to_world);
+			const mat_model_view_light = create_mat_model_view_light(light_position_world, this.mat_model_to_world);
 
 			pipeline_draw_terrain({
 				mat_mvp: this.mat_mvp,

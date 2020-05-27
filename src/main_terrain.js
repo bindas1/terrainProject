@@ -62,7 +62,7 @@ async function main() {
 		'shader_shadowmap_gen_frag': load_text('./src/shaders/shadowmap_gen.frag'),
 		'shader_vis_vert': load_text('./src/shaders/cubemap_visualization.vert'),
 		'shader_vis_frag': load_text('./src/shaders/cubemap_visualization.frag'),
-		'new_terrain': load_mesh_obj(regl, './meshes/newTerrain7.obj'),
+		'new_terrain': load_mesh_obj(regl, './meshes/newTerrain7_double_very_close.obj'),
 	};
 
 	[
