@@ -106,11 +106,7 @@ void main()
 	vec2 position_in_texture = (position_in_light_view.xy + 5.0) * 0.1; //to convert -5->5 to 0->1
 
 	float dist_light_and_first_posn_in_shadow_map = texture2D(shadowmap, position_in_texture).r;
-	vec3 up_vector_in_camera_view = normalize(mat_normals * vec3(0,0,1));
 
-	// if (-1.0 * position_in_light_view.z < 1.01 * dist_light_and_first_posn_in_shadow_map && dot(up_vector_in_camera_view, v2f_dir_to_light) > 0.0) {
-	// if (-1.0 * position_in_light_view.z < 1.009 * dist_light_and_first_posn_in_shadow_map) {
-	// if (dot(up_vector_in_camera_view, v2f_dir_to_light) > 0.0){
 	if(-1.0 * position_in_light_view.z < 1.003 * dist_light_and_first_posn_in_shadow_map){
 		if (dotNL > 0.0){
 			color += light_color * material_color * dotNL;
