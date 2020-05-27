@@ -37,29 +37,21 @@ void main()
     float t = sim_time*2.;
     float water_level = 0.3;
 
-    float shift_down = 0.5;
-    float amplitude = 1.;  //scaling of the sampled height to avoid to extreme values, or increase extreme values
-    float terrain_size = 25.; //indicates size of  terrain, so we can shrink the x,y down using this value back to values between [0,1]
-    float reverse_terrain_size = 1./terrain_size;
-    vec2 scaled_positions = vec2(position_v4.x*reverse_terrain_size+0.5, position_v4.y*reverse_terrain_size+0.5);
-    position_v4.z = length(texture2D(height_map, scaled_positions).rgb) - 0.5;
+    if (position_v4.z > -0.1){
+        float terrain_size = 25.; //indicates size of  terrain, so we can shrink the x,y down using this value back to values between [0,1]
+        float reverse_terrain_size = 1./terrain_size;
+        vec2 scaled_positions = vec2(position_v4.x*reverse_terrain_size+0.5, position_v4.y*reverse_terrain_size+0.5);
+        position_v4.z = length(texture2D(height_map, scaled_positions).rgb) - 0.5;
 
-    if(position_v4.z <= water_level) {
-         // simulate little waves on water
-        vec2 uv = vec2(position_v4.x, position_v4.y);
-        const float PI = 3.1415;
-        float v = 5.*PI;
-        float acc = 3.;
-        float amplitude = .003;
-        position_v4.z = (sin((uv.x*v-time)*acc)+cos((uv.y*v-time)*acc))*amplitude*2. + water_level;
-        //newNormal = normalize(vec3(amplitude*(v*acc*cos((uv.x*v-time)*acc) - acc*v*sin((uv.y*v-time)*acc)), 0., 1.));
-        //position_v4.z = cos(position_v4.x*5000.+t) * sin(position_v4.y * 1000.) * 0.05 - sin(position_v4.x*1000.) * sin(position_v4.y * 1600.) * 0.05;
-        //newNormal = normalize(vec3(-1500.*sin(10000.*position_v4.x+t)*sin(1000.*position_v4.y) - 100. * sin(1600.*position_v4.y) * cos(1000.*position_v4.x),0., 1.));
-        //position_v4.z = cos(position_v4.x*5000.) * sin(position_v4.y * 1000.) * 0.3 - sin(position_v4.x*1000.) * sin(position_v4.y * 1600.) * 0.1;
-        //newNormal = normalize(vec3((3000.*position_v4.x)*sin(1000.*position_v4.y) - 100. * sin(1600.*position_v4.y) * cos(1000.*position_v4.x),0., 1.));
-        //position_v4 = vec4(vec3(position_v4.x, position_v4.y, 0.05 * tex_fbm_for_water(vec2(position_v4.x, position_v4.y))), position_v4.w);
-        //position_v4.z = (cos(1600.0 * position_v4.x) * cos(800.0 * position_v4.y) * 0.024*5.);
-        //newNormal = normalize(vec3(5.*38.4*sin(1600.*position_v4.x)*cos(800.*position_v4.y),0., 1.));
+        if(position_v4.z <= water_level) {
+            // simulate little waves on water
+            vec2 uv = vec2(position_v4.x, position_v4.y);
+            const float PI = 3.1415;
+            float v = 5.*PI;
+            float acc = 3.;
+            float amplitude = .003;
+            position_v4.z = (sin((uv.x*v-time)*acc)+cos((uv.y*v-time)*acc))*amplitude*2. + water_level;
+        }
     }
 
     position_v3 = position;

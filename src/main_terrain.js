@@ -62,7 +62,7 @@ async function main() {
 		'shader_shadowmap_gen_frag': load_text('./src/shaders/shadowmap_gen.frag'),
 		'shader_vis_vert': load_text('./src/shaders/cubemap_visualization.vert'),
 		'shader_vis_frag': load_text('./src/shaders/cubemap_visualization.frag'),
-		'new_terrain': load_mesh_obj(regl, './meshes/newTerrain7.obj'),
+		'new_terrain': load_mesh_obj(regl, './meshes/fan_try_very_small_triangle_double_normal.obj'),
 	};
 
 	[
@@ -195,7 +195,7 @@ async function main() {
 		const factor_mul_base = 1.08;
 		const factor_mul = (event.deltaY > 0) ? factor_mul_base : 1./factor_mul_base;
 		cam_distance_factor *= factor_mul;
-		cam_distance_factor = Math.max(0.5, Math.min(cam_distance_factor, 1.5));
+		cam_distance_factor = Math.max(0.5, Math.min(cam_distance_factor, 20));
 		// console.log('wheel', event.deltaY, event.deltaMode);
 		event.preventDefault(); // don't scroll the page too...
 		update_cam_transform();
@@ -281,7 +281,7 @@ async function main() {
 	let prev_regl_time = 0;
 	register_keyboard_action('p', () => is_paused = !is_paused);
 
-	let show_shadowmap_debug = false;
+	let show_shadowmap_debug = true;
 	register_keyboard_action('h', () => show_shadowmap_debug = !show_shadowmap_debug);
 
 	function activate_preset_view() {
