@@ -62,7 +62,7 @@ async function main() {
 		'shader_shadowmap_gen_frag': load_text('./src/shaders/shadowmap_gen.frag'),
 		'shader_vis_vert': load_text('./src/shaders/cubemap_visualization.vert'),
 		'shader_vis_frag': load_text('./src/shaders/cubemap_visualization.frag'),
-		'new_terrain': load_mesh_obj(regl, './meshes/fan_try_very_small_triangle_double_normal.obj'),
+		'new_terrain': load_mesh_obj(regl, './meshes/fan_try_triangle_double_super_thin.obj'),
 	};
 
 	[
