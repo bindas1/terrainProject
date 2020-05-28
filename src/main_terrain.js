@@ -5,8 +5,6 @@ const {mat2, mat4, mat3, vec4, vec3, vec2} = glMatrix;
 
 const deg_to_rad = Math.PI / 180;
 
-const mesh_uvsphere = icg_mesh_make_uv_sphere(10);
-
 async function main() {
 	/* const in JS means the variable will not be bound to a new value, but the value can be modified (if its an object or array)
 		https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const
@@ -57,7 +55,6 @@ async function main() {
 
 	// Start downloads in parallel
 	const resources = {
-		'sun': load_texture(regl, './textures/sun.jpg'),
 		'shader_shadowmap_gen_vert': load_text('./src/shaders/shadowmap_gen.vert'), //for shadowmap
 		'shader_shadowmap_gen_frag': load_text('./src/shaders/shadowmap_gen.frag'),
 		'shader_vis_vert': load_text('./src/shaders/cubemap_visualization.vert'),
@@ -76,9 +73,6 @@ async function main() {
 
 		"buffer_to_screen.vert",
 		"buffer_to_screen.frag",
-
-		"sphere.vert", //for sun
-		"sphere.frag",
 	].forEach((shader_filename) => {
 		resources[`shaders/${shader_filename}`] = load_text(`./src/shaders/${shader_filename}`);
 	});
@@ -93,33 +87,6 @@ async function main() {
 	/*---------------------------------------------------------------
 		GPU pipeline
 	---------------------------------------------------------------*/
-	// Define the GPU pipeline used to draw a sphere
-	const draw_sphere = regl({
-		// Vertex attributes
-		attributes: {
-			// 3 vertices with 2 coordinates each
-			position: mesh_uvsphere.vertex_positions,
-			tex_coord: mesh_uvsphere.vertex_tex_coords,
-		},
-		// Faces, as triplets of vertex indices
-		elements: mesh_uvsphere.faces,
-
-		// Uniforms: global data available to the shader
-		uniforms: {
-			mat_mvp: regl.prop('mat_mvp'),
-			texture_base_color: regl.prop('tex_base_color'),
-		},
-
-		// Vertex shader program
-		// Given vertex attributes, it calculates the position of the vertex on screen
-		// and intermediate data ("varying") passed on to the fragment shader
-		vert: resources['shaders/sphere.vert'],
-
-		// Fragment shader
-		// Calculates the color of each pixel covered by the mesh.
-		// The "varying" values are interpolated between the values given by the vertex shader on the vertices of the current triangle.
-		frag: resources['shaders/sphere.frag'],
-	});
 
 	// Define the GPU pipeline used to draw a billboard for the sun
 	const draw_billoard_sun = regl({
@@ -414,27 +381,7 @@ async function main() {
 			terrain_actor.visualize_distance_map();
 		}
 
-		// const sun_sphere = {
-		// 	orbits: null,
-		// 	texture: resources.sun,
-		// 	size: 2.,
-		// 	rotation_speed: 0.1,
-		// 	mat_model_to_world: mat4.create() // initialize transform matrix
-		// }
-
-		// const actor = sun_sphere
-		// const closer_light_position = vec4FromVec3(vec3.scale(vec3.create(), vec3FromVec4(light_position_world), 0.1), 1);
-		// const mat_trans = mat4.fromTranslation(mat4.create(), closer_light_position)
-
-		// const mat_scale = mat4.fromScaling(mat4.create(), [actor.size, actor.size, actor.size])
-		// mat4_matmul_many(actor.mat_model_to_world, mat_trans, mat_scale);
-
-		// mat4_matmul_many(mat_mvp, mat_projection, mat_view, actor.mat_model_to_world)
-
-		// draw_sphere({
-		// 	mat_mvp: mat_mvp,
-		// 	tex_base_color: actor.texture,
-		// });
+		//// ========== Add billboard for sun =====================
 
 		const camera_position = [0, 0, 0];
 		const mat_camera_to_world = mat4.invert(mat4.create(), mat_view);
@@ -459,6 +406,8 @@ async function main() {
 		draw_billoard_sun({
 			mat_mvp: mat_mvp,
 		})
+
+		//// ========== END add billboard for sun =====================
 
 
 		// for better performance we should collect these props and then draw them all together
