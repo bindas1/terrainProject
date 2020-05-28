@@ -60,8 +60,16 @@ async function main() {
 		'shader_vis_vert': load_text('./src/shaders/cubemap_visualization.vert'),
 		'shader_vis_frag': load_text('./src/shaders/cubemap_visualization.frag'),
 		'new_terrain': load_mesh_obj(regl, './meshes/newTerrain7_double_very_close.obj'),
+
+		//sun
 		'shader_billboard_vert': load_text('./src/shaders/billboard_sun.vert'),
 		'shader_billboard_frag': load_text('./src/shaders/billboard_sun.frag'),
+
+		//cloud
+		'shader_billboard_cloud_vert': load_text('./src/shaders/billboard_cloud.vert'),
+		'shader_billboard_cloud_frag': load_text('./src/shaders/billboard_cloud.frag'),
+		'cloud_texture': load_texture(regl, './textures/texture.jpg'),
+		'cloud_shape': load_texture(regl, './textures/cloud.jpg'),
 	};
 
 	[
@@ -131,6 +139,53 @@ async function main() {
 		}
 	});
 
+		// Define the GPU pipeline used to draw a billboard for the sun
+		const draw_billoard_cloud = regl({
+			// Vertex attributes
+			attributes: {
+				// 4 vertices with 3 coordinates each
+				position: [
+					[-1, -1, 0],
+					[1, -1, 0],
+					[1, 1, 0],
+					[-1, 1, 0],
+				],
+			},
+
+			// Faces, as triplets of vertex indices
+			elements: [
+				[0, 1, 2], // top right
+				[0, 2, 3], // bottom left
+			],
+
+			// Uniforms: global data available to the shader
+			uniforms: {
+				mat_mvp: regl.prop('mat_mvp'),
+				height_map: regl.prop('height_map'),
+				cloud_shape_map: resources.cloud_shape,
+				cloud_noise_map: resources.cloud_texture,
+				sim_time: regl.prop('sim_time'),
+			},
+
+			// Vertex shader program
+			vert: resources.shader_billboard_cloud_vert,
+			frag: resources.shader_billboard_cloud_frag,
+
+			blend : {
+				enable: true,
+				func: {
+					srcRGB: 'src alpha',
+					srcAlpha: 1,
+					dstRGB: 'one minus src alpha',
+					dstAlpha: 1
+				},
+				equation: {
+					rgb: 'add',
+					alpha: 'add'
+				},
+			}
+		});
+
 	/*---------------------------------------------------------------
 		Camera
 	---------------------------------------------------------------*/
@@ -144,25 +199,6 @@ async function main() {
 	let cam_target = [0, 0, 0];
 
 	function update_cam_transform() {
-		/* TODO copy
-		* Copy your solution to Task 2.2 of assignment 5.
-		Calculate the world-to-camera transformation matrix.
-		The camera orbits the scene
-		* cam_distance_base * cam_distance_factor = distance of the camera from the (0, 0, 0) point
-		* cam_angle_z - camera ray's angle around the Z axis
-		* cam_angle_y - camera ray's angle around the Y axis
-
-		* cam_target - the point we orbit around
-		*/
-
-		/* TODO 2.2
-		Calculate the world-to-camera transformation matrix.
-		The camera orbits the scene
-		* cam_distance_base * cam_distance_factor = distance of the camera from the (0, 0, 0) point
-		* cam_angle_z - camera ray's angle around the Z axis
-		* cam_angle_y - camera ray's angle around the Y axis
-		*/
-
 		let r = cam_distance_base * cam_distance_factor
 
 		let mat_rotY = mat4.fromYRotation(mat4.create(), cam_angle_y)
@@ -280,6 +316,24 @@ async function main() {
 	texture_fbm.draw_texture_to_buffer({width: 96, height: 96, mouse_offset, zoom_factor: 10.});
 	//texture_fbm.draw_buffer_to_screen();
 	let terrain_actor = init_terrain(regl, resources, texture_fbm.get_buffer());
+
+	texture_fbm.draw_texture_to_buffer({mouse_offset, zoom_factor: 3.});
+
+	function cloud_mvp(mat_projection, mat_view, x, y, z, scale_x, scale_y, scale_z, angle = 0) {
+
+		const mat_mvp = mat4.create()
+
+		const mat_trans_cloud = mat4.fromTranslation(mat4.create(), [x, y, z])
+		const mat_rot_x_cloud = mat4.fromXRotation(mat4.create(), -Math.PI/4)
+		const mat_rot_z_cloud = mat4.fromZRotation(mat4.create(), angle)
+		const mat_scale_cloud = mat4.fromScaling(mat4.create(), [scale_x, scale_y, scale_z])
+
+		const mat_model_to_world_cloud = mat4_matmul_many(mat4.create(), mat_rot_z_cloud, mat_trans_cloud, mat_rot_x_cloud, mat_scale_cloud)
+
+		mat4_matmul_many(mat_mvp, mat_projection, mat_view, mat_model_to_world_cloud)
+
+		return mat_mvp
+	}
 
 	/*
 		UI
@@ -407,11 +461,27 @@ async function main() {
 			mat_mvp: mat_mvp,
 		})
 
-		//// ========== END add billboard for sun =====================
+		//// ========== Add billboard for cloud ====================
 
-
-		// for better performance we should collect these props and then draw them all together
-		// http://regl.party/api#batch-rendering
+		draw_billoard_cloud(
+			[
+				{
+					mat_mvp: cloud_mvp(mat_projection, mat_view, 1,5,3, 4,4,4),
+					height_map: texture_fbm.get_buffer(),
+					sim_time: sim_time+1,
+				},
+				{
+					mat_mvp: cloud_mvp(mat_projection, mat_view, 0,5,2.8, 4,4,4, Math.PI*0.9),
+					height_map: texture_fbm.get_buffer(),
+					sim_time: sim_time+3,
+				},
+				{
+					mat_mvp: cloud_mvp(mat_projection, mat_view, 0,5,3, 6,4,4, Math.PI*1.4),
+					height_map: texture_fbm.get_buffer(),
+					sim_time: sim_time+5,
+				},
+			]
+		)
 
 		debug_text.textContent = `
 		Hello! Sim time is ${sim_time.toFixed(2)} s
