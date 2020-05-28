@@ -5,8 +5,6 @@ const {mat2, mat4, mat3, vec4, vec3, vec2} = glMatrix;
 
 const deg_to_rad = Math.PI / 180;
 
-const mesh_uvsphere = icg_mesh_make_uv_sphere(10);
-
 async function main() {
 	/* const in JS means the variable will not be bound to a new value, but the value can be modified (if its an object or array)
 		https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const
@@ -57,12 +55,13 @@ async function main() {
 
 	// Start downloads in parallel
 	const resources = {
-		'sun': load_texture(regl, './textures/sun.jpg'),
 		'shader_shadowmap_gen_vert': load_text('./src/shaders/shadowmap_gen.vert'), //for shadowmap
 		'shader_shadowmap_gen_frag': load_text('./src/shaders/shadowmap_gen.frag'),
 		'shader_vis_vert': load_text('./src/shaders/cubemap_visualization.vert'),
 		'shader_vis_frag': load_text('./src/shaders/cubemap_visualization.frag'),
 		'new_terrain': load_mesh_obj(regl, './meshes/newTerrain7_double_very_close.obj'),
+		'shader_billboard_vert': load_text('./src/shaders/billboard_sun.vert'),
+		'shader_billboard_frag': load_text('./src/shaders/billboard_sun.frag'),
 	};
 
 	[
@@ -74,9 +73,6 @@ async function main() {
 
 		"buffer_to_screen.vert",
 		"buffer_to_screen.frag",
-
-		"sphere.vert", //for sun
-		"sphere.frag",
 	].forEach((shader_filename) => {
 		resources[`shaders/${shader_filename}`] = load_text(`./src/shaders/${shader_filename}`);
 	});
@@ -91,32 +87,48 @@ async function main() {
 	/*---------------------------------------------------------------
 		GPU pipeline
 	---------------------------------------------------------------*/
-	// Define the GPU pipeline used to draw a sphere
-	const draw_sphere = regl({
+
+	// Define the GPU pipeline used to draw a billboard for the sun
+	const draw_billoard_sun = regl({
 		// Vertex attributes
 		attributes: {
-			// 3 vertices with 2 coordinates each
-			position: mesh_uvsphere.vertex_positions,
-			tex_coord: mesh_uvsphere.vertex_tex_coords,
+			// 4 vertices with 3 coordinates each
+			position: [
+				[-1, -1, 0],
+				[1, -1, 0],
+				[1, 1, 0],
+				[-1, 1, 0],
+			],
 		},
+
 		// Faces, as triplets of vertex indices
-		elements: mesh_uvsphere.faces,
+		elements: [
+			[0, 1, 2], // top right
+			[0, 2, 3], // bottom left
+		],
 
 		// Uniforms: global data available to the shader
 		uniforms: {
 			mat_mvp: regl.prop('mat_mvp'),
-			texture_base_color: regl.prop('tex_base_color'),
 		},
 
 		// Vertex shader program
-		// Given vertex attributes, it calculates the position of the vertex on screen
-		// and intermediate data ("varying") passed on to the fragment shader
-		vert: resources['shaders/sphere.vert'],
+		vert: resources.shader_billboard_vert,
+		frag: resources.shader_billboard_frag,
 
-		// Fragment shader
-		// Calculates the color of each pixel covered by the mesh.
-		// The "varying" values are interpolated between the values given by the vertex shader on the vertices of the current triangle.
-		frag: resources['shaders/sphere.frag'],
+		blend : {
+			enable: true,
+			func: {
+				srcRGB: 'src alpha',
+				srcAlpha: 1,
+				dstRGB: 'one minus src alpha',
+				dstAlpha: 1
+			},
+			equation: {
+				rgb: 'add',
+				alpha: 'add'
+			},
+		}
 	});
 
 	/*---------------------------------------------------------------
@@ -298,23 +310,6 @@ async function main() {
 	document.getElementById('btn-preset-view').addEventListener('click', activate_preset_view);
 	register_keyboard_action('c', activate_preset_view);
 
-	const actors_by_name = {
-		sun: {
-			orbits: null,
-			texture: resources.sun,
-			size: 0.1,
-			rotation_speed: 0.1,
-		},
-	}
-
-	//keep this in case later we add more object to our world
-	const actors_list = [actors_by_name.sun]
-
-	for (const actor of actors_list) {
-		// initialize transform matrix
-		actor.mat_model_to_world = mat4.create();
-	}
-
 	/*---------------------------------------------------------------
 		Frame render
 	---------------------------------------------------------------*/
@@ -386,21 +381,37 @@ async function main() {
 			terrain_actor.visualize_distance_map();
 		}
 
-		for (const actor of actors_list) {
-			const mat_trans = mat4.fromTranslation(mat4.create(), light_position_world)
+		//// ========== Add billboard for sun =====================
 
-			const mat_scale = mat4.fromScaling(mat4.create(), [actor.size, actor.size, actor.size])
-			mat4_matmul_many(actor.mat_model_to_world, mat_trans, mat_scale);
+		const camera_position = [0, 0, 0];
+		const mat_camera_to_world = mat4.invert(mat4.create(), mat_view);
+		mat4.getTranslation(camera_position, mat_camera_to_world);
 
-			mat4_matmul_many(mat_mvp, mat_projection, mat_view, actor.mat_model_to_world)
+		let nb = vec3.normalize(vec3.create(), camera_position)
+		let z = [0,0,1]
 
-			draw_sphere({
-				mat_mvp: mat_mvp,
-				tex_base_color: actor.texture,
-			});
-			// for better performance we should collect these props and then draw them all together
-			// http://regl.party/api#batch-rendering
-		}
+		const closer_light_position = vec4FromVec3(vec3.scale(vec3.create(), vec3FromVec4(light_position_world), 0.1), 1);
+		const mat_trans = mat4.fromTranslation(mat4.create(), closer_light_position)
+
+		let angle_sun = Math.acos(vec3.dot(nb, z))
+		let axis = vec3.cross(vec3.create(), nb, z)
+		let mat_rot = mat4.fromRotation(mat4.create(), -angle_sun, axis)
+
+		let dist = 2
+		const mat_scale = mat4.fromScaling(mat4.create(), [dist, dist, dist])
+		const mat_model_to_world = mat4_matmul_many(mat4.create(), mat_trans, mat_rot, mat_scale)
+
+		mat4_matmul_many(mat_mvp, mat_projection, mat_view, mat_model_to_world);
+
+		draw_billoard_sun({
+			mat_mvp: mat_mvp,
+		})
+
+		//// ========== END add billboard for sun =====================
+
+
+		// for better performance we should collect these props and then draw them all together
+		// http://regl.party/api#batch-rendering
 
 		debug_text.textContent = `
 		Hello! Sim time is ${sim_time.toFixed(2)} s
