@@ -60,7 +60,8 @@ void main()
 		//divide by terrain size
 		float weight = (height - terrain_water_level)/50.;
     	material_color = mix(terrain_color_grass, terrain_color_mountain, weight);
-	}
+	} 
+
 
 	//============================find normal
 	float gx = position_v3.x;

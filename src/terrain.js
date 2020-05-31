@@ -25,7 +25,7 @@ class BufferData {
 	}
 }
 
-function init_terrain(regl, resources, height_map_buffer) {
+function init_terrain(regl, resources, height_map_buffer, water_height_map_buffer) {
 
 	const terrain_mesh = resources.new_terrain
 
@@ -47,6 +47,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 			mat_mvp:        regl.prop('mat_mvp'),
 			mat_model_view: regl.prop('mat_model_view'),
 			height_map: height_map_buffer,
+			water_height_map: water_height_map_buffer,
 		},
 
 		vert: resources.shader_shadowmap_gen_vert,
@@ -68,6 +69,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 			sim_time: regl.prop('sim_time'),
 			light_position: regl.prop('light_position'),
 			height_map: height_map_buffer,
+			water_height_map: water_height_map_buffer,
 			shadowmap: shadowmap,
 		},
 		elements: terrain_mesh.faces,

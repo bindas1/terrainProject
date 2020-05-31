@@ -304,6 +304,7 @@ async function main() {
 
 	const noise_textures = init_noise(regl, resources);
 
+	const noise_textures_water = init_noise(regl, resources);
 	const texture_fbm = (() => {
 		for(const t of noise_textures) {
 			//if(t.name === 'FBM') {
@@ -313,9 +314,19 @@ async function main() {
 		}
 	})();
 
+	const texture_water= (() => {
+		for(const t of noise_textures_water) {
+			//if(t.name === 'FBM') {
+			if(t.name === 'FBM_for_terrain') {
+				return t;
+			}
+		}
+	})();
+
+	texture_water.draw_texture_to_buffer({width: 3000, height: 3000, mouse_offset, zoom_factor: 2.});
 	texture_fbm.draw_texture_to_buffer({width: 96, height: 96, mouse_offset, zoom_factor: 10.});
 	//texture_fbm.draw_buffer_to_screen();
-	let terrain_actor = init_terrain(regl, resources, texture_fbm.get_buffer());
+	let terrain_actor = init_terrain(regl, resources, texture_fbm.get_buffer(), texture_water.get_buffer());
 
 	texture_fbm.draw_texture_to_buffer({mouse_offset, zoom_factor: 3.});
 
@@ -344,6 +355,7 @@ async function main() {
 
 	let is_paused = false;
 	let sim_time = 0;
+	let sim_time_for_water = 0;
 	let prev_regl_time = 0;
 	register_keyboard_action('p', () => is_paused = !is_paused);
 
@@ -380,6 +392,9 @@ async function main() {
 			const dt = frame.time - prev_regl_time;
 			sim_time += dt;
 		}
+		//for now water cant be paused
+		const dt = frame.time - prev_regl_time;
+			sim_time_for_water += dt;
 		prev_regl_time = frame.time;
 
 		regl.clear({color: [0.6, 0.8, 1., 1]});
@@ -393,7 +408,10 @@ async function main() {
 			100, // far
 		)
 
+		let offset = [sim_time_for_water, 0]; //water only moves along x for now
+	    texture_water.draw_texture_to_buffer({width: 3000, height: 3000, mouse_offset: offset, zoom_factor: 20.});
 		texture_fbm.draw_texture_to_buffer({width: 3000, height: 3000, mouse_offset, zoom_factor: 10.});
+		//texture_water.draw_texture_to_buffer({width: 3000, height: 3000, offset, zoom_factor: 20.});
 		//texture_fbm.draw_buffer_to_screen();
 
 		mat4.copy(mat_view, mat_world_to_cam);
