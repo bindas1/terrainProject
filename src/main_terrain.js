@@ -408,7 +408,7 @@ async function main() {
 			100, // far
 		)
 
-		let offset = [sim_time_for_water, 0]; //water only moves along x for now
+		let offset = [sim_time_for_water/2, sim_time_for_water/4]; //water only moves along x for now
 	    texture_water.draw_texture_to_buffer({width: 3000, height: 3000, mouse_offset: offset, zoom_factor: 20.});
 		texture_fbm.draw_texture_to_buffer({width: 3000, height: 3000, mouse_offset, zoom_factor: 10.});
 		//texture_water.draw_texture_to_buffer({width: 3000, height: 3000, offset, zoom_factor: 20.});
