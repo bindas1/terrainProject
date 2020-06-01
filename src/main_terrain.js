@@ -419,33 +419,32 @@ async function main() {
 		// Calculate light position in camera frame
 		vec4.transformMat4(light_position_cam, light_position_world, mat_view);
 
+		// Set background color
+		const sunset_pink_color = [246/255, 114/255, 128/255];
+		const sky_blue_color = [135/255, 206/255, 235/255];
+		const night_black_color = [7/255, 11/255, 52/255];
+
+		const normalized_light_position_world = vec3.normalize(vec3.create(), light_position_world);
+		const angle = Math.acos(vec3.dot(normalized_light_position_world, [0,0,1]));
+
+		let sky_color;
+		if (angle < Math.PI/2){
+			const val_btw_zero_and_one = 2*angle/Math.PI; //angle is between 0 and pi/2. so divide by pi/2 to get btw 0->1
+			sky_color = vec3.lerp(vec3.create(), sky_blue_color, sunset_pink_color, Math.exp(1-1/Math.pow(val_btw_zero_and_one, 2)));
+		} else {
+			const val_btw_zero_and_one = 2*(Math.PI - angle)/Math.PI; //angle is btw pi/2 and pi. so I do pi - angle to get it btwn 0 and pi/2 and do like above
+			sky_color = vec3.lerp(vec3.create(), night_black_color, sunset_pink_color, Math.exp(1-1/Math.pow(val_btw_zero_and_one, 2)));
+		}
+		regl.clear({color: vec4FromVec3(sky_color, 1)});
+
 		const scene_info = {
 			mat_view:        mat_view,
 			mat_projection:  mat_projection,
 			light_position_world: light_position_world,
 			light_position_cam: light_position_cam,
 			sim_time:        sim_time,
+			sky_color:       sky_color,
 		}
-
-		// Set background color
-		// const sunset_red_color = [1, 60/255, 60/255, 1];
-		// const sunset_orange_color = [253/255, 94/255, 83/255,1];
-		const sunset_pink_color = [246/255, 114/255, 128/255, 1];
-		const sky_blue_color = [135/255, 206/255, 235/255, 1];
-		const night_black_color = [7/255, 11/255, 52/255, 1];
-
-		const normalized_light_position_world = vec3.normalize(vec3.create(), light_position_world);
-		const angle = Math.acos(vec3.dot(normalized_light_position_world, [0,0,1]));
-
-		let color;
-		if (angle < Math.PI/2){
-			const val_btw_zero_and_one = 2*angle/Math.PI; //angle is between 0 and pi/2. so divide by pi/2 to get btw 0->1
-			color = vec4.lerp(vec4.create(), sky_blue_color, sunset_pink_color, Math.exp(1-1/Math.pow(val_btw_zero_and_one, 2)));
-		} else {
-			const val_btw_zero_and_one = 2*(Math.PI - angle)/Math.PI; //angle is btw pi/2 and pi. so I do pi - angle to get it btwn 0 and pi/2 and do like above
-			color = vec4.lerp(vec4.create(), night_black_color, sunset_pink_color, Math.exp(1-1/Math.pow(val_btw_zero_and_one, 2)));
-		}
-		regl.clear({color: color});
 
 		terrain_actor.render_shadowmap(scene_info);
 		terrain_actor.draw_phong_contribution(scene_info);
