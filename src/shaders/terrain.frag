@@ -64,38 +64,43 @@ void main()
 	float reverse_terrain_size = 1./terrain_size;
 	float delta_xy = 0.05; //needs to small enough to barely hit the next pixel!
 
+	float h_xdx11 = 0.;
+	float h_xdx21 = 0.;
+	float h_xdx12 = 0.;
+	float h_xdx22 = 0.;
+
 	float noise_val = height;
 	if(noise_val < terrain_water_level) {
 		material_color = terrain_color_water;
 		shininess = 8.0;
 
 		vec2 spos = vec2((gx+delta_xy)*reverse_terrain_size+0.5, gy*reverse_terrain_size+0.5);
-		float h_xdx11 =  length(texture2D(water_height_map, spos).rgb);
+		h_xdx11 =  length(texture2D(water_height_map, spos).rgb);
 
 		spos = vec2((gx-delta_xy)*reverse_terrain_size+0.5, gy*reverse_terrain_size+0.5);
-		float h_xdx12 =  length(texture2D(water_height_map, spos).rgb);
+		h_xdx12 =  length(texture2D(water_height_map, spos).rgb);
 
 		spos = vec2((gx)*reverse_terrain_size+0.5, (gy+ delta_xy)*reverse_terrain_size+0.5);
-		float h_xdx21 =  length(texture2D(water_height_map, spos).rgb);
+		h_xdx21 =  length(texture2D(water_height_map, spos).rgb);
 
 		spos = vec2((gx)*reverse_terrain_size+0.5, (gy-delta_xy)*reverse_terrain_size+0.5);
-		float h_xdx22 =  length(texture2D(water_height_map, spos).rgb);
+		h_xdx22 =  length(texture2D(water_height_map, spos).rgb);
 	} else {
 		//divide by terrain size
 		float weight = (height - terrain_water_level)/50.;
     	material_color = mix(terrain_color_grass, terrain_color_mountain, weight);
 
 		vec2 spos = vec2((gx+delta_xy)*reverse_terrain_size+0.5, gy*reverse_terrain_size+0.5);
-		float h_xdx11 =  length(texture2D(height_map, spos).rgb);
+		h_xdx11 =  length(texture2D(height_map, spos).rgb);
 
 		spos = vec2((gx-delta_xy)*reverse_terrain_size+0.5, gy*reverse_terrain_size+0.5);
-		float h_xdx12 =  length(texture2D(height_map, spos).rgb);
+		h_xdx12 =  length(texture2D(height_map, spos).rgb);
 
 		spos = vec2((gx)*reverse_terrain_size+0.5, (gy+ delta_xy)*reverse_terrain_size+0.5);
-		float h_xdx21 =  length(texture2D(height_map, spos).rgb);
+		h_xdx21 =  length(texture2D(height_map, spos).rgb);
 
 		spos = vec2((gx)*reverse_terrain_size+0.5, (gy-delta_xy)*reverse_terrain_size+0.5);
-		float h_xdx22 =  length(texture2D(height_map, spos).rgb);
+		h_xdx22 =  length(texture2D(height_map, spos).rgb);
 	} 
 
 	
