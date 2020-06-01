@@ -4,13 +4,12 @@ uniform float sim_time;
 uniform sampler2D cloud_shape_map;
 uniform sampler2D cloud_noise_map;
 uniform sampler2D height_map;
+uniform vec3 cloud_color;
 
 // Per-vertex outputs passed on to the fragment shader
 varying vec2 v2f_tex_coord;
 
 void main() {
-    const vec3 cloud_color = vec3(0.95, 0.95, 0.95);
-
     // Sliding textures to simulate the cloud moving
     // webGL screen coords are -1 ... 1 but texture sampling is in range 0 ... 1, that's why all the mod()
     // TODO maybe not mod it but use mouse offset?
@@ -30,5 +29,5 @@ void main() {
     // Alpha
     float alpha = pow((txtNoise1 + txtNoise2).r, 2.5) *  txtShape.r;
 
-    gl_FragColor = vec4(vec3(0.95,0.95,0.95), alpha);
+    gl_FragColor = vec4(cloud_color, alpha);
 }

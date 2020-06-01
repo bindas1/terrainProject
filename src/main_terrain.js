@@ -165,6 +165,7 @@ async function main() {
 				cloud_shape_map: resources.cloud_shape,
 				cloud_noise_map: resources.cloud_texture,
 				sim_time: regl.prop('sim_time'),
+				cloud_color: regl.prop('cloud_color'),
 			},
 
 			// Vertex shader program
@@ -415,17 +416,23 @@ async function main() {
 		const sunset_pink_color = [246/255, 114/255, 128/255, 1];
 		const sky_blue_color = [135/255, 206/255, 235/255, 1];
 		const night_black_color = [7/255, 11/255, 52/255, 1];
+		const cloud_white_color = [0.95,0.95,0.95];
+		const cloud_black_color = [29/255, 43/255, 87/255];
 
 		const normalized_light_position_world = vec3.normalize(vec3.create(), light_position_world);
 		const angle = Math.acos(vec3.dot(normalized_light_position_world, [0,0,1]));
 
 		let color;
+		let cloud_color;
+
 		if (angle < Math.PI/2){
 			const val_btw_zero_and_one = 2*angle/Math.PI; //angle is between 0 and pi/2. so divide by pi/2 to get btw 0->1
 			color = vec4.lerp(vec4.create(), sky_blue_color, sunset_pink_color, Math.exp(1-1/Math.pow(val_btw_zero_and_one, 2)));
+			cloud_color = cloud_white_color
 		} else {
 			const val_btw_zero_and_one = 2*(Math.PI - angle)/Math.PI; //angle is btw pi/2 and pi. so I do pi - angle to get it btwn 0 and pi/2 and do like above
 			color = vec4.lerp(vec4.create(), night_black_color, sunset_pink_color, Math.exp(1-1/Math.pow(val_btw_zero_and_one, 2)));
+			cloud_color = vec3.lerp(vec3.create(), cloud_black_color, cloud_white_color, Math.exp(1-1/Math.pow(val_btw_zero_and_one, 2)));
 		}
 		regl.clear({color: color});
 
@@ -469,26 +476,31 @@ async function main() {
 					mat_mvp: cloud_mvp(mat_projection, mat_view, 1,5,3, 4,4,4),
 					height_map: texture_fbm.get_buffer(),
 					sim_time: sim_time+1,
+					cloud_color: cloud_color,
 				},
 				{
 					mat_mvp: cloud_mvp(mat_projection, mat_view, 0,5,2.8, 4,4,4, Math.PI*0.9),
 					height_map: texture_fbm.get_buffer(),
 					sim_time: sim_time+3,
+					cloud_color: cloud_color,
 				},
 				{
 					mat_mvp: cloud_mvp(mat_projection, mat_view, 0,5,3, 6,4,4, Math.PI*1.4),
 					height_map: texture_fbm.get_buffer(),
 					sim_time: sim_time+5,
+					cloud_color: cloud_color,
 				},
 				{
 					mat_mvp: cloud_mvp(mat_projection, mat_view, 0,5,2.5, 3,2,2, Math.PI*0.3),
 					height_map: texture_fbm.get_buffer(),
 					sim_time: sim_time+7,
+					cloud_color: cloud_color,
 				},
 				{
 					mat_mvp: cloud_mvp(mat_projection, mat_view, 0,5,2.5, 3,3,3, Math.PI*0.6),
 					height_map: texture_fbm.get_buffer(),
 					sim_time: sim_time+9,
+					cloud_color: cloud_color,
 				},
 			]
 		)
