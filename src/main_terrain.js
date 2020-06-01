@@ -480,6 +480,16 @@ async function main() {
 					height_map: texture_fbm.get_buffer(),
 					sim_time: sim_time+5,
 				},
+				{
+					mat_mvp: cloud_mvp(mat_projection, mat_view, 0,5,2.5, 3,2,2, Math.PI*0.3),
+					height_map: texture_fbm.get_buffer(),
+					sim_time: sim_time+7,
+				},
+				{
+					mat_mvp: cloud_mvp(mat_projection, mat_view, 0,5,2.5, 3,3,3, Math.PI*0.6),
+					height_map: texture_fbm.get_buffer(),
+					sim_time: sim_time+9,
+				},
 			]
 		)
 
