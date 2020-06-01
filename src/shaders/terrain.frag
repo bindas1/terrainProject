@@ -16,7 +16,7 @@ uniform mat3 mat_normals; // mat3 not 4, because normals are only rotated and no
 const vec3  light_color = vec3(1.0, 0.941, 0.898);
 
 // Small perturbation to prevent "z-fighting" on the water on some machines...
-const float terrain_water_level    = 0.3 + 0.015 + 1e-6;
+const float terrain_water_level    = 0.3 + 0.03 + 1e-6;
 const vec3  terrain_color_water    = vec3(0.29, 0.51, 0.62);
 const vec3  terrain_color_mountain = vec3(0.8, 0.5, 0.4);
 const vec3  terrain_color_grass    = vec3(0.33, 0.43, 0.18);
@@ -74,17 +74,20 @@ void main()
 		material_color = terrain_color_water;
 		shininess = 8.0;
 
+		// same as in vert
+		float amplitude = 0.15;
+
 		vec2 spos = vec2((gx+delta_xy)*reverse_terrain_size+0.5, gy*reverse_terrain_size+0.5);
-		h_xdx11 =  length(texture2D(water_height_map, spos).rgb);
+		h_xdx11 =  length(texture2D(water_height_map, spos).rgb) * amplitude;
 
 		spos = vec2((gx-delta_xy)*reverse_terrain_size+0.5, gy*reverse_terrain_size+0.5);
-		h_xdx12 =  length(texture2D(water_height_map, spos).rgb);
+		h_xdx12 =  length(texture2D(water_height_map, spos).rgb) * amplitude;
 
 		spos = vec2((gx)*reverse_terrain_size+0.5, (gy+ delta_xy)*reverse_terrain_size+0.5);
-		h_xdx21 =  length(texture2D(water_height_map, spos).rgb);
+		h_xdx21 =  length(texture2D(water_height_map, spos).rgb) * amplitude;
 
 		spos = vec2((gx)*reverse_terrain_size+0.5, (gy-delta_xy)*reverse_terrain_size+0.5);
-		h_xdx22 =  length(texture2D(water_height_map, spos).rgb);
+		h_xdx22 =  length(texture2D(water_height_map, spos).rgb) * amplitude;
 	} else {
 		//divide by terrain size
 		float weight = (height - terrain_water_level)/50.;

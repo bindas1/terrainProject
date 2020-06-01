@@ -202,6 +202,6 @@ vec3 tex_fbm_for_terrain(vec2 point) {
 }
 
 vec3 tex_fbm_for_water(vec2 point) {
-	float noise_val = (perlin_fbm(point) * 0.1) + perlin_fbm(vec2(point.x, point.x)) * 0.01;
+	float noise_val = (perlin_fbm(point) * 0.1) + perlin_fbm(vec2(point.x, point.x)) * 0.01 + perlin_fbm(vec2(point.y, point.y)) * 0.02 + 0.55;
 	return vec3(noise_val);
 }

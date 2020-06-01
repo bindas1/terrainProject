@@ -52,7 +52,7 @@ void main()
             float acc = 3.;
             float amplitude = .003;
             position_v4.z = (sin((uv.x*v-time)*acc)+cos((uv.y*v-time)*acc))*amplitude*2. + water_level;*/
-            float amplitude = 0.05;
+            float amplitude = 0.15;
             position_v4.z = length(texture2D(water_height_map, scaled_positions).rgb)*amplitude + water_level - amplitude;
         }
     }
