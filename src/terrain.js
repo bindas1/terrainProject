@@ -69,6 +69,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 			light_position: regl.prop('light_position'),
 			height_map: height_map_buffer,
 			shadowmap: shadowmap,
+			fog_color: regl.prop('fog_color'),
 		},
 		elements: terrain_mesh.faces,
 
@@ -163,7 +164,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 			});
 		}
 
-		draw_phong_contribution({mat_projection, mat_view, light_position_cam, light_position_world, sim_time}) {
+		draw_phong_contribution({mat_projection, mat_view, light_position_cam, light_position_world, sim_time, sky_color}) {
 			mat4_matmul_many(this.mat_model_view, mat_view, this.mat_model_to_world);
 			mat4_matmul_many(this.mat_mvp, mat_projection, this.mat_model_view);
 
@@ -180,6 +181,7 @@ function init_terrain(regl, resources, height_map_buffer) {
 				mat_normals: this.mat_normals,
 				sim_time: sim_time,
 				light_position: light_position_cam,
+				fog_color: sky_color,
 			});
 		}
 
