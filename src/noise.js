@@ -69,7 +69,23 @@ function init_noise(regl, resources) {
 		}
 
 		generate_frag_shader() {
-			return `${noise_library_code}
+			if(this.shader_func_name == "tex_fbm_for_water") {
+				return `${noise_library_code}
+
+			// --------------
+
+			varying vec2 v2f_tex_coords;
+
+			// add sim time
+
+			void main() {
+				vec3 color = ${this.shader_func_name}(v2f_tex_coords);
+				gl_FragColor = vec4(color, 1.0);
+			}
+			`;
+			}
+			else {
+				return `${noise_library_code}
 
 			// --------------
 
@@ -80,6 +96,8 @@ function init_noise(regl, resources) {
 				gl_FragColor = vec4(color, 1.0);
 			}
 			`;
+
+			}
 		}
 
 		get_buffer() {
