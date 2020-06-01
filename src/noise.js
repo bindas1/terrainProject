@@ -113,6 +113,7 @@ function init_noise(regl, resources) {
 
 	const noise_textures = [
 		new NoiseTexture('FBM_for_terrain', 'tex_fbm_for_terrain', true),
+		new NoiseTexture('FBM_for_water', 'tex_fbm_for_water', true),
 	];
 
 	return noise_textures;

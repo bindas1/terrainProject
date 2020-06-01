@@ -317,7 +317,7 @@ async function main() {
 	const texture_water= (() => {
 		for(const t of noise_textures_water) {
 			//if(t.name === 'FBM') {
-			if(t.name === 'FBM_for_terrain') {
+			if(t.name === 'FBM_for_water') {
 				return t;
 			}
 		}
