@@ -26,6 +26,23 @@ vec2 gradients(int i) {
 	return vec2(0, 0);
 }
 
+// -- Gradient table 3D --
+vec3 gradients3D(int i) {
+	if (i ==  0) return vec3( 1,  1, 0);
+	if (i ==  1) return vec3(-1,  1, 0);
+	if (i ==  2) return vec3( 1, -1, 0);
+	if (i ==  3) return vec3(-1, -1, 0);
+	if (i ==  4) return vec3( 1,  0, 1);
+	if (i ==  5) return vec3(-1,  0, 1);
+	if (i ==  6) return vec3( 1,  0, -1);
+	if (i ==  7) return vec3(-1,  0, -1);
+	if (i ==  8) return vec3( 0,  1, 1);
+	if (i ==  9) return vec3( 0, -1, 1);
+	if (i == 10) return vec3( 0,  1, -1);
+	if (i == 11) return vec3( 0, -1, -1);
+	return vec3(0, 0, 0);
+}
+
 float hash_poly(float x) {
 	return mod(((x*34.0)+1.0)*x, 289.0);
 }
@@ -34,6 +51,11 @@ float hash_poly(float x) {
 // Map a gridpoint to 0..(NUM_GRADIENTS - 1)
 int hash_func(vec2 grid_point) {
 	return int(mod(hash_poly(hash_poly(grid_point.x) + grid_point.y), float(NUM_GRADIENTS)));
+}
+
+// Map a gridpoint to 0..(NUM_GRADIENTS - 1)
+int hash_func3D(vec3 grid_point) {
+	return int(mod(hash_poly(hash_poly(hash_poly(grid_point.x) + grid_point.y) + grid_point.z), float(NUM_GRADIENTS)));
 }
 
 // -- Smooth interpolation polynomial --
@@ -139,6 +161,92 @@ vec3 plots(vec2 point) {
 }
 
 // ==============================================================
+// 3D Perlin noise evaluation
+float perlin_noise_3d(vec3 point) {
+	vec3 c0 = vec3(floor(point.x), floor(point.y), floor(point.z));
+	vec3 c1 = vec3(c0.x, c0.y + 1., c0.z);
+	vec3 c2 = vec3(c0.x + 1., c0.y, c0.z);
+	vec3 c3 = vec3(c0.x + 1., c0.y + 1., c0.z);
+
+	vec3 c4 = vec3(c0.x, c0.y, c0.z + 1.);
+	vec3 c5 = vec3(c0.x, c0.y + 1., c0.z + 1.);
+	vec3 c6 = vec3(c0.x + 1., c0.y, c0.z + 1.);
+	vec3 c7 = vec3(c0.x + 1., c0.y + 1., c0.z + 1.);
+
+	vec3 g0 = gradients3D(hash_func3D(c0));
+	vec3 g1 = gradients3D(hash_func3D(c1));
+	vec3 g2 = gradients3D(hash_func3D(c2));
+	vec3 g3 = gradients3D(hash_func3D(c3));
+
+	vec3 g4 = gradients3D(hash_func3D(c4));
+	vec3 g5 = gradients3D(hash_func3D(c5));
+	vec3 g6 = gradients3D(hash_func3D(c6));
+	vec3 g7 = gradients3D(hash_func3D(c7));
+
+	float phi_0 = dot(g0, (point - c0));
+	float phi_1 = dot(g1, (point - c1));
+	float phi_2 = dot(g2, (point - c2));
+	float phi_3 = dot(g3, (point - c3));
+
+	float phi_4 = dot(g4, (point - c4));
+	float phi_5 = dot(g5, (point - c5));
+	float phi_6 = dot(g6, (point - c6));
+	float phi_7 = dot(g7, (point - c7));
+
+	vec3 t = point - c0;
+	float dist_x = t.x;
+	float dist_y = t.y;
+	float dist_z = t.z;
+
+
+	float res1 = mix(phi_0, phi_2, blending_weight_poly(dist_x));
+	float res2 = mix(phi_1, phi_3, blending_weight_poly(dist_x));
+	float one_side = mix(res1, res2, blending_weight_poly(dist_y));
+
+
+	float res3 = mix(phi_4, phi_5, blending_weight_poly(dist_x));
+	float res4 = mix(phi_6, phi_7, blending_weight_poly(dist_x));
+	float second_side = mix(res3, res4, blending_weight_poly(dist_y));
+
+	return mix(one_side, second_side, blending_weight_poly(dist_z));
+}
+
+// ==============================================================
+// 3D Fractional Brownian Motion
+
+float perlin_fbm_3d(vec3 point) {
+    /*
+    Implement 3D fBm as described in the handout. Like in the 2D case, you
+    should use the constants num_octaves, freq_multiplier, and ampl_multiplier.
+    */
+    float fbm = 0.0;
+    for(int i = 0; i < num_octaves; i++) {
+        float w1i = pow(freq_multiplier, float(i));
+        fbm += pow(ampl_multiplier, float(i)) * perlin_noise_3d(vec3(point.x * w1i, point.y * w1i, point.z * w1i));
+    }
+
+    return fbm;
+}
+
+
+// ==============================================================
+// 3D turbulence
+
+float turbulence_3d(vec3 point) {
+    /*
+    Implement the 3D turbulence function as described in the handout.
+    Again, you should use num_octaves, freq_multiplier, and ampl_multiplier.
+    */
+    float fbm = 0.0;
+    for(int i = 0; i < num_octaves; i++) {
+        float w1i = pow(freq_multiplier, float(i));
+        fbm += pow(ampl_multiplier, float(i)) * abs(perlin_noise_3d(vec3(point.x * w1i, point.y * w1i, point.z * w1i)));
+    }
+
+    return fbm;
+}
+
+// ==============================================================
 // 2D Perlin noise evaluation
 
 
@@ -203,5 +311,13 @@ vec3 tex_fbm_for_terrain(vec2 point) {
 
 vec3 tex_fbm_for_water(vec2 point) {
 	float noise_val = (perlin_fbm(point) * 0.1) + perlin_fbm(vec2(point.x, point.x)) * 0.01 + perlin_fbm(vec2(point.y, point.y)) * 0.02 + 0.55;
+	return vec3(noise_val);
+}
+
+vec3 tex_fbm_for_water_3d(vec3 point) {
+	// float noise_val = (perlin_fbm_3d(point) * 0.1) + perlin_fbm_3d(vec3(point.x)) * 0.01 + perlin_fbm_3d(vec3(point.y)) * 0.02 + 0.55;
+	// float noise_val = (perlin_fbm_3d(point) * 0.1) - (perlin_fbm_3d(vec3(point.x, point.y, point.y)) * 0.25) + (perlin_fbm_3d(vec3(point.x)) * 0.25 ) - (perlin_fbm_3d(vec3(point.x, point.x, point.z)) * 0.2) + 0.3;
+	float noise_val = - turbulence_3d(point) * 0.5 + 0.7;
+
 	return vec3(noise_val);
 }

@@ -317,13 +317,13 @@ async function main() {
 	const texture_water= (() => {
 		for(const t of noise_textures_water) {
 			//if(t.name === 'FBM') {
-			if(t.name === 'FBM_for_water') {
+			if(t.name === 'FBM_for_water_3d') {
 				return t;
 			}
 		}
 	})();
 
-	
+
 	texture_water.draw_texture_to_buffer({width: 3000, height: 3000, mouse_offset, zoom_factor: 2.});
 	texture_fbm.draw_texture_to_buffer({width: 96, height: 96, mouse_offset, zoom_factor: 10.});
 	//texture_fbm.draw_buffer_to_screen();
@@ -395,12 +395,12 @@ async function main() {
 		}
 		//for now water cant be paused
 		const dt = frame.time - prev_regl_time;
-			sim_time_for_water += dt;
+		sim_time_for_water += dt;
 		prev_regl_time = frame.time;
 
 		regl.clear({color: [0.6, 0.8, 1., 1]});
 
-		const light_position_world = vec3.rotateY(vec3.create(), light_position_world_start, [0,0,0], sim_time*0.3).concat(1);
+		const light_position_world = vec3.rotateY(vec3.create(), light_position_world_start, [0,0,0], sim_time*0.08).concat(1);
 
 		mat4.perspective(mat_projection,
 			deg_to_rad * 60, // fov y
@@ -410,7 +410,7 @@ async function main() {
 		)
 
 		let offset = [sim_time_for_water/16, sim_time_for_water/32]; //water only moves along x for now
-	    texture_water.draw_texture_to_buffer({width: 3000, height: 3000, mouse_offset: offset, zoom_factor: 20.});
+		texture_water.draw_texture_to_buffer({width: 3000, height: 3000, mouse_offset: offset, zoom_factor: 20., sim_time: sim_time});
 		texture_fbm.draw_texture_to_buffer({width: 3000, height: 3000, mouse_offset, zoom_factor: 10.});
 		//texture_water.draw_texture_to_buffer({width: 3000, height: 3000, offset, zoom_factor: 20.});
 		//texture_fbm.draw_buffer_to_screen();
