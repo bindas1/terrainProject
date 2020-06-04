@@ -305,6 +305,7 @@ async function main() {
 
 	const noise_textures = init_noise(regl, resources);
 
+	const noise_textures_water = init_noise(regl, resources);
 	const texture_fbm = (() => {
 		for(const t of noise_textures) {
 			//if(t.name === 'FBM') {
@@ -314,11 +315,22 @@ async function main() {
 		}
 	})();
 
-	texture_fbm.draw_texture_to_buffer({width: 96, height: 96, mouse_offset, zoom_factor: 10.});
-	//texture_fbm.draw_buffer_to_screen();
-	let terrain_actor = init_terrain(regl, resources, texture_fbm.get_buffer());
+	const texture_water= (() => {
+		for(const t of noise_textures_water) {
+			//if(t.name === 'FBM') {
+			if(t.name === 'FBM_for_water_3d') {
+				return t;
+			}
+		}
+	})();
 
-	texture_fbm.draw_texture_to_buffer({mouse_offset, zoom_factor: 3.});
+
+	// texture_water.draw_texture_to_buffer({mouse_offset, zoom_factor: 10.});
+	// texture_fbm.draw_texture_to_buffer({width: 96, height: 96, mouse_offset, zoom_factor: 10.});
+	//texture_fbm.draw_buffer_to_screen();
+	let terrain_actor = init_terrain(regl, resources, texture_fbm.get_buffer(), texture_water.get_buffer());
+
+	// texture_fbm.draw_texture_to_buffer({mouse_offset, zoom_factor: 3.});
 
 	function cloud_mvp(mat_projection, mat_view, x, y, z, scale_x, scale_y, scale_z, angle = 0) {
 
@@ -385,7 +397,7 @@ async function main() {
 
 		regl.clear({color: [0.6, 0.8, 1., 1]});
 
-		const light_position_world = vec3.rotateY(vec3.create(), light_position_world_start, [0,0,0], sim_time*0.3).concat(1);
+		const light_position_world = vec3.rotateY(vec3.create(), light_position_world_start, [0,0,0], sim_time*0.08).concat(1);
 
 		mat4.perspective(mat_projection,
 			deg_to_rad * 60, // fov y
@@ -394,7 +406,11 @@ async function main() {
 			100, // far
 		)
 
+		// let offset = [sim_time, sim_time]; //water only moves along x for now
+		texture_water.draw_texture_to_buffer({width: 3000, height: 3000 , mouse_offset, zoom_factor: 10., sim_time: sim_time*0.08});
+		// texture_water.draw_texture_to_buffer({width: 3000, height: 3000, mouse_offset, zoom_factor: 20., sim_time: sim_time});
 		texture_fbm.draw_texture_to_buffer({width: 3000, height: 3000, mouse_offset, zoom_factor: 10.});
+		//texture_water.draw_texture_to_buffer({width: 3000, height: 3000, offset, zoom_factor: 20.});
 		//texture_fbm.draw_buffer_to_screen();
 
 		mat4.copy(mat_view, mat_world_to_cam);
@@ -406,8 +422,10 @@ async function main() {
 		const sunset_pink_color = [246/255, 114/255, 128/255];
 		const sky_blue_color = [135/255, 206/255, 235/255];
 		const night_black_color = [7/255, 11/255, 52/255];
+
 		const cloud_white_color = [0.95,0.95,0.95];
 		const cloud_black_color = [29/255, 43/255, 87/255];
+
 
 		const normalized_light_position_world = vec3.normalize(vec3.create(), light_position_world);
 		const angle = Math.acos(vec3.dot(normalized_light_position_world, [0,0,1]));
