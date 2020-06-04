@@ -325,12 +325,12 @@ async function main() {
 	})();
 
 
-	texture_water.draw_texture_to_buffer({width: 3000, height: 3000, mouse_offset, zoom_factor: 2.});
-	texture_fbm.draw_texture_to_buffer({width: 96, height: 96, mouse_offset, zoom_factor: 10.});
+	// texture_water.draw_texture_to_buffer({mouse_offset, zoom_factor: 10.});
+	// texture_fbm.draw_texture_to_buffer({width: 96, height: 96, mouse_offset, zoom_factor: 10.});
 	//texture_fbm.draw_buffer_to_screen();
 	let terrain_actor = init_terrain(regl, resources, texture_fbm.get_buffer(), texture_water.get_buffer());
 
-	texture_fbm.draw_texture_to_buffer({mouse_offset, zoom_factor: 3.});
+	// texture_fbm.draw_texture_to_buffer({mouse_offset, zoom_factor: 3.});
 
 	function cloud_mvp(mat_projection, mat_view, x, y, z, scale_x, scale_y, scale_z, angle = 0) {
 
@@ -357,7 +357,6 @@ async function main() {
 
 	let is_paused = false;
 	let sim_time = 0;
-	let sim_time_for_water = 0;
 	let prev_regl_time = 0;
 	register_keyboard_action('p', () => is_paused = !is_paused);
 
@@ -394,9 +393,6 @@ async function main() {
 			const dt = frame.time - prev_regl_time;
 			sim_time += dt;
 		}
-		//for now water cant be paused
-		const dt = frame.time - prev_regl_time;
-		sim_time_for_water += dt;
 		prev_regl_time = frame.time;
 
 		regl.clear({color: [0.6, 0.8, 1., 1]});
@@ -410,8 +406,9 @@ async function main() {
 			100, // far
 		)
 
-		let offset = [sim_time_for_water/16, sim_time_for_water/32]; //water only moves along x for now
-		texture_water.draw_texture_to_buffer({width: 3000, height: 3000, mouse_offset: offset, zoom_factor: 20., sim_time: sim_time});
+		// let offset = [sim_time, sim_time]; //water only moves along x for now
+		texture_water.draw_texture_to_buffer({mouse_offset, zoom_factor: 10., sim_time: sim_time*0.08});
+		// texture_water.draw_texture_to_buffer({width: 3000, height: 3000, mouse_offset, zoom_factor: 20., sim_time: sim_time});
 		texture_fbm.draw_texture_to_buffer({width: 3000, height: 3000, mouse_offset, zoom_factor: 10.});
 		//texture_water.draw_texture_to_buffer({width: 3000, height: 3000, offset, zoom_factor: 20.});
 		//texture_fbm.draw_buffer_to_screen();
