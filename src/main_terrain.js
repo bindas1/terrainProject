@@ -5,8 +5,6 @@ const {mat2, mat4, mat3, vec4, vec3, vec2} = glMatrix;
 
 const deg_to_rad = Math.PI / 180;
 
-const mesh_uvsphere = icg_mesh_make_uv_sphere(10);
-
 async function main() {
 	/* const in JS means the variable will not be bound to a new value, but the value can be modified (if its an object or array)
 		https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const
@@ -57,12 +55,21 @@ async function main() {
 
 	// Start downloads in parallel
 	const resources = {
-		'sun': load_texture(regl, './textures/sun.jpg'),
 		'shader_shadowmap_gen_vert': load_text('./src/shaders/shadowmap_gen.vert'), //for shadowmap
 		'shader_shadowmap_gen_frag': load_text('./src/shaders/shadowmap_gen.frag'),
 		'shader_vis_vert': load_text('./src/shaders/cubemap_visualization.vert'),
 		'shader_vis_frag': load_text('./src/shaders/cubemap_visualization.frag'),
 		'new_terrain': load_mesh_obj(regl, './meshes/newTerrain7_double_very_close.obj'),
+
+		//sun
+		'shader_billboard_vert': load_text('./src/shaders/billboard_sun.vert'),
+		'shader_billboard_frag': load_text('./src/shaders/billboard_sun.frag'),
+
+		//cloud
+		'shader_billboard_cloud_vert': load_text('./src/shaders/billboard_cloud.vert'),
+		'shader_billboard_cloud_frag': load_text('./src/shaders/billboard_cloud.frag'),
+		'cloud_texture': load_texture(regl, './textures/texture.jpg'),
+		'cloud_shape': load_texture(regl, './textures/cloud.jpg'),
 	};
 
 	[
@@ -74,9 +81,6 @@ async function main() {
 
 		"buffer_to_screen.vert",
 		"buffer_to_screen.frag",
-
-		"sphere.vert", //for sun
-		"sphere.frag",
 	].forEach((shader_filename) => {
 		resources[`shaders/${shader_filename}`] = load_text(`./src/shaders/${shader_filename}`);
 	});
@@ -91,33 +95,97 @@ async function main() {
 	/*---------------------------------------------------------------
 		GPU pipeline
 	---------------------------------------------------------------*/
-	// Define the GPU pipeline used to draw a sphere
-	const draw_sphere = regl({
+
+	// Define the GPU pipeline used to draw a billboard for the sun
+	const draw_billoard_sun = regl({
 		// Vertex attributes
 		attributes: {
-			// 3 vertices with 2 coordinates each
-			position: mesh_uvsphere.vertex_positions,
-			tex_coord: mesh_uvsphere.vertex_tex_coords,
+			// 4 vertices with 3 coordinates each
+			position: [
+				[-1, -1, 0],
+				[1, -1, 0],
+				[1, 1, 0],
+				[-1, 1, 0],
+			],
 		},
+
 		// Faces, as triplets of vertex indices
-		elements: mesh_uvsphere.faces,
+		elements: [
+			[0, 1, 2], // top right
+			[0, 2, 3], // bottom left
+		],
 
 		// Uniforms: global data available to the shader
 		uniforms: {
 			mat_mvp: regl.prop('mat_mvp'),
-			texture_base_color: regl.prop('tex_base_color'),
 		},
 
 		// Vertex shader program
-		// Given vertex attributes, it calculates the position of the vertex on screen
-		// and intermediate data ("varying") passed on to the fragment shader
-		vert: resources['shaders/sphere.vert'],
+		vert: resources.shader_billboard_vert,
+		frag: resources.shader_billboard_frag,
 
-		// Fragment shader
-		// Calculates the color of each pixel covered by the mesh.
-		// The "varying" values are interpolated between the values given by the vertex shader on the vertices of the current triangle.
-		frag: resources['shaders/sphere.frag'],
+		blend : {
+			enable: true,
+			func: {
+				srcRGB: 'src alpha',
+				srcAlpha: 1,
+				dstRGB: 'one minus src alpha',
+				dstAlpha: 1
+			},
+			equation: {
+				rgb: 'add',
+				alpha: 'add'
+			},
+		}
 	});
+
+		// Define the GPU pipeline used to draw a billboard for the sun
+		const draw_billoard_cloud = regl({
+			// Vertex attributes
+			attributes: {
+				// 4 vertices with 3 coordinates each
+				position: [
+					[-1, -1, 0],
+					[1, -1, 0],
+					[1, 1, 0],
+					[-1, 1, 0],
+				],
+			},
+
+			// Faces, as triplets of vertex indices
+			elements: [
+				[0, 1, 2], // top right
+				[0, 2, 3], // bottom left
+			],
+
+			// Uniforms: global data available to the shader
+			uniforms: {
+				mat_mvp: regl.prop('mat_mvp'),
+				height_map: regl.prop('height_map'),
+				cloud_shape_map: resources.cloud_shape,
+				cloud_noise_map: resources.cloud_texture,
+				sim_time: regl.prop('sim_time'),
+				cloud_color: regl.prop('cloud_color'),
+			},
+
+			// Vertex shader program
+			vert: resources.shader_billboard_cloud_vert,
+			frag: resources.shader_billboard_cloud_frag,
+
+			blend : {
+				enable: true,
+				func: {
+					srcRGB: 'src alpha',
+					srcAlpha: 1,
+					dstRGB: 'one minus src alpha',
+					dstAlpha: 1
+				},
+				equation: {
+					rgb: 'add',
+					alpha: 'add'
+				},
+			}
+		});
 
 	/*---------------------------------------------------------------
 		Camera
@@ -132,25 +200,6 @@ async function main() {
 	let cam_target = [0, 0, 0];
 
 	function update_cam_transform() {
-		/* TODO copy
-		* Copy your solution to Task 2.2 of assignment 5.
-		Calculate the world-to-camera transformation matrix.
-		The camera orbits the scene
-		* cam_distance_base * cam_distance_factor = distance of the camera from the (0, 0, 0) point
-		* cam_angle_z - camera ray's angle around the Z axis
-		* cam_angle_y - camera ray's angle around the Y axis
-
-		* cam_target - the point we orbit around
-		*/
-
-		/* TODO 2.2
-		Calculate the world-to-camera transformation matrix.
-		The camera orbits the scene
-		* cam_distance_base * cam_distance_factor = distance of the camera from the (0, 0, 0) point
-		* cam_angle_z - camera ray's angle around the Z axis
-		* cam_angle_y - camera ray's angle around the Y axis
-		*/
-
 		let r = cam_distance_base * cam_distance_factor
 
 		let mat_rotY = mat4.fromYRotation(mat4.create(), cam_angle_y)
@@ -269,6 +318,24 @@ async function main() {
 	//texture_fbm.draw_buffer_to_screen();
 	let terrain_actor = init_terrain(regl, resources, texture_fbm.get_buffer());
 
+	texture_fbm.draw_texture_to_buffer({mouse_offset, zoom_factor: 3.});
+
+	function cloud_mvp(mat_projection, mat_view, x, y, z, scale_x, scale_y, scale_z, angle = 0) {
+
+		const mat_mvp = mat4.create()
+
+		const mat_trans_cloud = mat4.fromTranslation(mat4.create(), [x, y, z])
+		const mat_rot_x_cloud = mat4.fromXRotation(mat4.create(), -Math.PI/4)
+		const mat_rot_z_cloud = mat4.fromZRotation(mat4.create(), angle)
+		const mat_scale_cloud = mat4.fromScaling(mat4.create(), [scale_x, scale_y, scale_z])
+
+		const mat_model_to_world_cloud = mat4_matmul_many(mat4.create(), mat_rot_z_cloud, mat_trans_cloud, mat_rot_x_cloud, mat_scale_cloud)
+
+		mat4_matmul_many(mat_mvp, mat_projection, mat_view, mat_model_to_world_cloud)
+
+		return mat_mvp
+	}
+
 	/*
 		UI
 	*/
@@ -297,23 +364,6 @@ async function main() {
 
 	document.getElementById('btn-preset-view').addEventListener('click', activate_preset_view);
 	register_keyboard_action('c', activate_preset_view);
-
-	const actors_by_name = {
-		sun: {
-			orbits: null,
-			texture: resources.sun,
-			size: 0.1,
-			rotation_speed: 0.1,
-		},
-	}
-
-	//keep this in case later we add more object to our world
-	const actors_list = [actors_by_name.sun]
-
-	for (const actor of actors_list) {
-		// initialize transform matrix
-		actor.mat_model_to_world = mat4.create();
-	}
 
 	/*---------------------------------------------------------------
 		Frame render
@@ -352,33 +402,38 @@ async function main() {
 		// Calculate light position in camera frame
 		vec4.transformMat4(light_position_cam, light_position_world, mat_view);
 
+		// Set background color
+		const sunset_pink_color = [246/255, 114/255, 128/255];
+		const sky_blue_color = [135/255, 206/255, 235/255];
+		const night_black_color = [7/255, 11/255, 52/255];
+		const cloud_white_color = [0.95,0.95,0.95];
+		const cloud_black_color = [29/255, 43/255, 87/255];
+
+		const normalized_light_position_world = vec3.normalize(vec3.create(), light_position_world);
+		const angle = Math.acos(vec3.dot(normalized_light_position_world, [0,0,1]));
+
+		let sky_color;
+		let cloud_color;
+
+		if (angle < Math.PI/2){
+			const val_btw_zero_and_one = 2*angle/Math.PI; //angle is between 0 and pi/2. so divide by pi/2 to get btw 0->1
+			sky_color = vec3.lerp(vec3.create(), sky_blue_color, sunset_pink_color, Math.exp(1-1/Math.pow(val_btw_zero_and_one, 2)));
+			cloud_color = cloud_white_color
+		} else {
+			const val_btw_zero_and_one = 2*(Math.PI - angle)/Math.PI; //angle is btw pi/2 and pi. so I do pi - angle to get it btwn 0 and pi/2 and do like above
+			sky_color = vec3.lerp(vec3.create(), night_black_color, sunset_pink_color, Math.exp(1-1/Math.pow(val_btw_zero_and_one, 2)));
+			cloud_color = vec3.lerp(vec3.create(), cloud_black_color, cloud_white_color, Math.exp(1-1/Math.pow(val_btw_zero_and_one, 2)));
+		}
+		regl.clear({color: vec4FromVec3(sky_color, 1)});
+
 		const scene_info = {
 			mat_view:        mat_view,
 			mat_projection:  mat_projection,
 			light_position_world: light_position_world,
 			light_position_cam: light_position_cam,
 			sim_time:        sim_time,
+			sky_color:       sky_color,
 		}
-
-		// Set background color
-		// const sunset_red_color = [1, 60/255, 60/255, 1];
-		// const sunset_orange_color = [253/255, 94/255, 83/255,1];
-		const sunset_pink_color = [246/255, 114/255, 128/255, 1];
-		const sky_blue_color = [135/255, 206/255, 235/255, 1];
-		const night_black_color = [7/255, 11/255, 52/255, 1];
-
-		const normalized_light_position_world = vec3.normalize(vec3.create(), light_position_world);
-		const angle = Math.acos(vec3.dot(normalized_light_position_world, [0,0,1]));
-
-		let color;
-		if (angle < Math.PI/2){
-			const val_btw_zero_and_one = 2*angle/Math.PI; //angle is between 0 and pi/2. so divide by pi/2 to get btw 0->1
-			color = vec4.lerp(vec4.create(), sky_blue_color, sunset_pink_color, Math.exp(1-1/Math.pow(val_btw_zero_and_one, 2)));
-		} else {
-			const val_btw_zero_and_one = 2*(Math.PI - angle)/Math.PI; //angle is btw pi/2 and pi. so I do pi - angle to get it btwn 0 and pi/2 and do like above
-			color = vec4.lerp(vec4.create(), night_black_color, sunset_pink_color, Math.exp(1-1/Math.pow(val_btw_zero_and_one, 2)));
-		}
-		regl.clear({color: color});
 
 		terrain_actor.render_shadowmap(scene_info);
 		terrain_actor.draw_phong_contribution(scene_info);
@@ -386,21 +441,68 @@ async function main() {
 			terrain_actor.visualize_distance_map();
 		}
 
-		for (const actor of actors_list) {
-			const mat_trans = mat4.fromTranslation(mat4.create(), light_position_world)
+		//// ========== Add billboard for sun =====================
 
-			const mat_scale = mat4.fromScaling(mat4.create(), [actor.size, actor.size, actor.size])
-			mat4_matmul_many(actor.mat_model_to_world, mat_trans, mat_scale);
+		const camera_position = [0, 0, 0];
+		const mat_camera_to_world = mat4.invert(mat4.create(), mat_view);
+		mat4.getTranslation(camera_position, mat_camera_to_world);
 
-			mat4_matmul_many(mat_mvp, mat_projection, mat_view, actor.mat_model_to_world)
+		let nb = vec3.normalize(vec3.create(), camera_position)
+		let z = [0,0,1]
 
-			draw_sphere({
-				mat_mvp: mat_mvp,
-				tex_base_color: actor.texture,
-			});
-			// for better performance we should collect these props and then draw them all together
-			// http://regl.party/api#batch-rendering
-		}
+		const closer_light_position = vec4FromVec3(vec3.scale(vec3.create(), vec3FromVec4(light_position_world), 0.1), 1);
+		const mat_trans = mat4.fromTranslation(mat4.create(), closer_light_position)
+
+		let angle_sun = Math.acos(vec3.dot(nb, z))
+		let axis = vec3.cross(vec3.create(), nb, z)
+		let mat_rot = mat4.fromRotation(mat4.create(), -angle_sun, axis)
+
+		let dist = 2
+		const mat_scale = mat4.fromScaling(mat4.create(), [dist, dist, dist])
+		const mat_model_to_world = mat4_matmul_many(mat4.create(), mat_trans, mat_rot, mat_scale)
+
+		mat4_matmul_many(mat_mvp, mat_projection, mat_view, mat_model_to_world);
+
+		draw_billoard_sun({
+			mat_mvp: mat_mvp,
+		})
+
+		//// ========== Add billboard for cloud ====================
+
+		draw_billoard_cloud(
+			[
+				{
+					mat_mvp: cloud_mvp(mat_projection, mat_view, 1,5,3, 4,4,4),
+					height_map: texture_fbm.get_buffer(),
+					sim_time: sim_time+1,
+					cloud_color: cloud_color,
+				},
+				{
+					mat_mvp: cloud_mvp(mat_projection, mat_view, 0,5,2.8, 4,4,4, Math.PI*0.9),
+					height_map: texture_fbm.get_buffer(),
+					sim_time: sim_time+3,
+					cloud_color: cloud_color,
+				},
+				{
+					mat_mvp: cloud_mvp(mat_projection, mat_view, 0,5,3, 6,4,4, Math.PI*1.4),
+					height_map: texture_fbm.get_buffer(),
+					sim_time: sim_time+5,
+					cloud_color: cloud_color,
+				},
+				{
+					mat_mvp: cloud_mvp(mat_projection, mat_view, 0,5,2.5, 3,2,2, Math.PI*0.3),
+					height_map: texture_fbm.get_buffer(),
+					sim_time: sim_time+7,
+					cloud_color: cloud_color,
+				},
+				{
+					mat_mvp: cloud_mvp(mat_projection, mat_view, 0,5,2.5, 3,3,3, Math.PI*0.6),
+					height_map: texture_fbm.get_buffer(),
+					sim_time: sim_time+9,
+					cloud_color: cloud_color,
+				},
+			]
+		)
 
 		debug_text.textContent = `
 		Hello! Sim time is ${sim_time.toFixed(2)} s

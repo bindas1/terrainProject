@@ -58,18 +58,18 @@ The various units of measurement available in CSS:
 	width: 100%;
 	height: 100%;
 	/* margin: 1rem; */
-	border: 0px none; 
-	margin: 0px; 
-	padding: 0px; 
-	top: 0px; 
-	left: 0px; 
-	position: absolute; 
+	border: 0px none;
+	margin: 0px;
+	padding: 0px;
+	top: 0px;
+	left: 0px;
+	position: absolute;
 }
 
 #debug-overlay {
-	top: 1rem; 
-	left: 1rem; 
-	position: absolute; 
+	top: 1rem;
+	left: 1rem;
+	position: absolute;
 	z-index: 2;
 
 	/* padding: 0 0.5rem 0 0.5rem; */
@@ -88,4 +88,8 @@ The various units of measurement available in CSS:
 }
 #debug-overlay pre {
 	font-size: 0.8em;
+}
+
+.hide {
+	display: none;
 }

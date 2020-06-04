@@ -71,15 +71,15 @@ function init_noise(regl, resources) {
 		generate_frag_shader() {
 			return `${noise_library_code}
 
-// --------------
+			// --------------
 
-varying vec2 v2f_tex_coords;
+			varying vec2 v2f_tex_coords;
 
-void main() {
-	vec3 color = ${this.shader_func_name}(v2f_tex_coords);
-	gl_FragColor = vec4(color, 1.0);
-}
-`;
+			void main() {
+				vec3 color = ${this.shader_func_name}(v2f_tex_coords);
+				gl_FragColor = vec4(color, 1.0);
+			}
+			`;
 		}
 
 		get_buffer() {
