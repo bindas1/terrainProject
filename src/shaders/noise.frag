@@ -163,52 +163,51 @@ vec3 plots(vec2 point) {
 // ==============================================================
 // 3D Perlin noise evaluation
 float perlin_noise_3d(vec3 point) {
-	vec3 c0 = vec3(floor(point.x), floor(point.y), floor(point.z));
-	vec3 c1 = vec3(c0.x, c0.y + 1., c0.z);
-	vec3 c2 = vec3(c0.x + 1., c0.y, c0.z);
-	vec3 c3 = vec3(c0.x + 1., c0.y + 1., c0.z);
+  vec3 c0 = vec3(floor(point.x), floor(point.y), floor(point.z));
+  vec3 c1 = vec3(c0.x     , c0.y + 1., c0.z);
+  vec3 c2 = vec3(c0.x + 1., c0.y     , c0.z);
+  vec3 c3 = vec3(c0.x + 1., c0.y + 1., c0.z);
 
-	vec3 c4 = vec3(c0.x, c0.y, c0.z + 1.);
-	vec3 c5 = vec3(c0.x, c0.y + 1., c0.z + 1.);
-	vec3 c6 = vec3(c0.x + 1., c0.y, c0.z + 1.);
-	vec3 c7 = vec3(c0.x + 1., c0.y + 1., c0.z + 1.);
+  vec3 c4 = vec3(c0.x     , c0.y     , c0.z + 1.);
+  vec3 c5 = vec3(c0.x     , c0.y + 1., c0.z + 1.);
+  vec3 c6 = vec3(c0.x + 1., c0.y     , c0.z + 1.);
+  vec3 c7 = vec3(c0.x + 1., c0.y + 1., c0.z + 1.);
 
-	vec3 g0 = gradients3D(hash_func3D(c0));
-	vec3 g1 = gradients3D(hash_func3D(c1));
-	vec3 g2 = gradients3D(hash_func3D(c2));
-	vec3 g3 = gradients3D(hash_func3D(c3));
+  vec3 g0 = gradients3D(hash_func3D(c0));
+  vec3 g1 = gradients3D(hash_func3D(c1));
+  vec3 g2 = gradients3D(hash_func3D(c2));
+  vec3 g3 = gradients3D(hash_func3D(c3));
 
-	vec3 g4 = gradients3D(hash_func3D(c4));
-	vec3 g5 = gradients3D(hash_func3D(c5));
-	vec3 g6 = gradients3D(hash_func3D(c6));
-	vec3 g7 = gradients3D(hash_func3D(c7));
+  vec3 g4 = gradients3D(hash_func3D(c4));
+  vec3 g5 = gradients3D(hash_func3D(c5));
+  vec3 g6 = gradients3D(hash_func3D(c6));
+  vec3 g7 = gradients3D(hash_func3D(c7));
 
-	float phi_0 = dot(g0, (point - c0));
-	float phi_1 = dot(g1, (point - c1));
-	float phi_2 = dot(g2, (point - c2));
-	float phi_3 = dot(g3, (point - c3));
+  float phi_0 = dot(g0, (point - c0));
+  float phi_1 = dot(g1, (point - c1));
+  float phi_2 = dot(g2, (point - c2));
+  float phi_3 = dot(g3, (point - c3));
 
-	float phi_4 = dot(g4, (point - c4));
-	float phi_5 = dot(g5, (point - c5));
-	float phi_6 = dot(g6, (point - c6));
-	float phi_7 = dot(g7, (point - c7));
+  float phi_4 = dot(g4, (point - c4));
+  float phi_5 = dot(g5, (point - c5));
+  float phi_6 = dot(g6, (point - c6));
+  float phi_7 = dot(g7, (point - c7));
 
-	vec3 t = point - c0;
-	float dist_x = t.x;
-	float dist_y = t.y;
-	float dist_z = t.z;
+  vec3 t = point - c0;
+  float dist_x = t.x;
+  float dist_y = t.y;
+  float dist_z = t.z;
 
+  float res1 = mix(phi_0, phi_2, blending_weight_poly(t.x));
+  float res2 = mix(phi_1, phi_3, blending_weight_poly(t.x));
+  float one_side = mix(res1, res2, blending_weight_poly(dist_y));
 
-	float res1 = mix(phi_0, phi_2, blending_weight_poly(dist_x));
-	float res2 = mix(phi_1, phi_3, blending_weight_poly(dist_x));
-	float one_side = mix(res1, res2, blending_weight_poly(dist_y));
+  float res3 = mix(phi_4, phi_6, blending_weight_poly(dist_x));
+  float res4 = mix(phi_5, phi_7, blending_weight_poly(dist_x));
+  float second_side = mix(res3, res4, blending_weight_poly(dist_y));
 
+  return mix(one_side, second_side, blending_weight_poly(dist_z));
 
-	float res3 = mix(phi_4, phi_5, blending_weight_poly(dist_x));
-	float res4 = mix(phi_6, phi_7, blending_weight_poly(dist_x));
-	float second_side = mix(res3, res4, blending_weight_poly(dist_y));
-
-	return mix(one_side, second_side, blending_weight_poly(dist_z));
 }
 
 // ==============================================================
