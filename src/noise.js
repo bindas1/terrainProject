@@ -42,6 +42,7 @@ function init_noise(regl, resources) {
 		uniforms: {
 			viewer_position: regl.prop('viewer_position'),
 			viewer_scale:    regl.prop('viewer_scale'),
+			sim_time:        regl.prop('sim_time'),
 		},
 
 		vert: resources['shaders/display.vert'],
@@ -69,24 +70,57 @@ function init_noise(regl, resources) {
 		}
 
 		generate_frag_shader() {
-			return `${noise_library_code}
+			if(this.shader_func_name == "tex_fbm_for_water") {
+				return `${noise_library_code}
 
-			// --------------
+				// --------------
 
-			varying vec2 v2f_tex_coords;
+				varying vec2 v2f_tex_coords;
 
-			void main() {
-				vec3 color = ${this.shader_func_name}(v2f_tex_coords);
-				gl_FragColor = vec4(color, 1.0);
+				// add sim time
+
+				void main() {
+					vec3 color = ${this.shader_func_name}(v2f_tex_coords);
+					gl_FragColor = vec4(color, 1.0);
+				}
+				`;
+			} else if(this.shader_func_name == "tex_fbm_for_water_3d") {
+				return `${noise_library_code}
+
+				// --------------
+
+				varying vec2 v2f_tex_coords;
+
+				uniform float sim_time;
+
+				// add sim time
+
+				void main() {
+					vec3 point = vec3(v2f_tex_coords.x, v2f_tex_coords.y, sim_time);
+					vec3 color = ${this.shader_func_name}(point);
+					gl_FragColor = vec4(color, 1.0);
+				}
+				`;
+			} else {
+				return `${noise_library_code}
+
+				// --------------
+
+				varying vec2 v2f_tex_coords;
+
+				void main() {
+					vec3 color = ${this.shader_func_name}(v2f_tex_coords);
+					gl_FragColor = vec4(color, 1.0);
+				}
+				`;
 			}
-			`;
 		}
 
 		get_buffer() {
 			return noise_buffer;
 		}
 
-		draw_texture_to_buffer({mouse_offset = [0, 0], zoom_factor = 1.0, width = 768, height = 768}) {
+		draw_texture_to_buffer({sim_time = 0, mouse_offset = [0, 0], zoom_factor = 1.0, width = 768, height = 768}) {
 			// adjust the buffer size to the desired value
 			if (noise_buffer.width != width || noise_buffer.height != height) {
 				noise_buffer.resize(width, height);
@@ -101,6 +135,7 @@ function init_noise(regl, resources) {
 				shader_frag: this.shader_frag,
 				viewer_position: vec2.negate([0, 0], mouse_offset),
 				viewer_scale: zoom_factor,
+				sim_time: sim_time,
 			});
 
 			return noise_buffer;
@@ -113,6 +148,8 @@ function init_noise(regl, resources) {
 
 	const noise_textures = [
 		new NoiseTexture('FBM_for_terrain', 'tex_fbm_for_terrain', true),
+		new NoiseTexture('FBM_for_water', 'tex_fbm_for_water', true),
+		new NoiseTexture('FBM_for_water_3d', 'tex_fbm_for_water_3d', true),
 	];
 
 	return noise_textures;

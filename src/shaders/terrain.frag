@@ -10,13 +10,14 @@ varying vec3 position_v3;
 uniform vec4 light_position; //in camera space coordinates already
 uniform sampler2D shadowmap;
 uniform sampler2D height_map;
+uniform sampler2D water_height_map;
 uniform mat3 mat_normals; // mat3 not 4, because normals are only rotated and not translated
 uniform vec3 fog_color;
 
 const vec3  light_color = vec3(1.0, 0.941, 0.898);
 
 // Small perturbation to prevent "z-fighting" on the water on some machines...
-const float terrain_water_level    = 0.3 + 0.015 + 1e-6;
+const float terrain_water_level    = 0.3 + 0.0282 + 1e-6;
 const vec3  terrain_color_water    = vec3(0.29, 0.51, 0.62);
 const vec3  terrain_color_mountain = vec3(0.8, 0.5, 0.4);
 const vec3  terrain_color_grass    = vec3(0.33, 0.43, 0.18);
@@ -52,15 +53,8 @@ void main()
 	*/
 	//float noise_val = perlin_fbm(point);
 	//float noise_val = perlin_fbm(v2f_tex_coord);
-	float noise_val = height;
-	if(noise_val < terrain_water_level) {
-		material_color = terrain_color_water;
-		shininess = 8.0;
-	} else {
-		//divide by terrain size
-		float weight = (height - terrain_water_level)/50.;
-    	material_color = mix(terrain_color_grass, terrain_color_mountain, weight);
-	}
+
+
 
 	//============================find normal
 	float gx = position_v3.x;
@@ -70,19 +64,49 @@ void main()
 	float reverse_terrain_size = 1./terrain_size;
 	float delta_xy = 0.05; //needs to small enough to barely hit the next pixel!
 
-	vec2 spos = vec2((gx+delta_xy)*reverse_terrain_size+0.5, gy*reverse_terrain_size+0.5);
-	float h_xdx11 =  length(texture2D(height_map, spos).rgb);
+	float h_xdx11 = 0.;
+	float h_xdx21 = 0.;
+	float h_xdx12 = 0.;
+	float h_xdx22 = 0.;
 
-	spos = vec2((gx-delta_xy)*reverse_terrain_size+0.5, gy*reverse_terrain_size+0.5);
-	float h_xdx12 =  length(texture2D(height_map, spos).rgb);
+	float noise_val = height;
+	if(noise_val < terrain_water_level) {
+		material_color = terrain_color_water;
+		shininess = 8.0;
 
-	spos = vec2((gx)*reverse_terrain_size+0.5, (gy+ delta_xy)*reverse_terrain_size+0.5);
-	float h_xdx21 =  length(texture2D(height_map, spos).rgb);
+		// same as in vert
+		float amplitude = 0.15;
 
-	spos = vec2((gx)*reverse_terrain_size+0.5, (gy-delta_xy)*reverse_terrain_size+0.5);
-	float h_xdx22 =  length(texture2D(height_map, spos).rgb);
+		vec2 spos = vec2((gx+delta_xy)*reverse_terrain_size+0.5, gy*reverse_terrain_size+0.5);
+		h_xdx11 =  length(texture2D(water_height_map, spos).rgb) * amplitude;
 
-	// dz/dx = (h(x+dx) - h(x-dx)) / (2 dx)
+		spos = vec2((gx-delta_xy)*reverse_terrain_size+0.5, gy*reverse_terrain_size+0.5);
+		h_xdx12 =  length(texture2D(water_height_map, spos).rgb) * amplitude;
+
+		spos = vec2((gx)*reverse_terrain_size+0.5, (gy+ delta_xy)*reverse_terrain_size+0.5);
+		h_xdx21 =  length(texture2D(water_height_map, spos).rgb) * amplitude;
+
+		spos = vec2((gx)*reverse_terrain_size+0.5, (gy-delta_xy)*reverse_terrain_size+0.5);
+		h_xdx22 =  length(texture2D(water_height_map, spos).rgb) * amplitude;
+	} else {
+		//divide by terrain size
+		float weight = (height - terrain_water_level)/50.;
+    	material_color = mix(terrain_color_grass, terrain_color_mountain, weight);
+
+		vec2 spos = vec2((gx+delta_xy)*reverse_terrain_size+0.5, gy*reverse_terrain_size+0.5);
+		h_xdx11 =  length(texture2D(height_map, spos).rgb);
+
+		spos = vec2((gx-delta_xy)*reverse_terrain_size+0.5, gy*reverse_terrain_size+0.5);
+		h_xdx12 =  length(texture2D(height_map, spos).rgb);
+
+		spos = vec2((gx)*reverse_terrain_size+0.5, (gy+ delta_xy)*reverse_terrain_size+0.5);
+		h_xdx21 =  length(texture2D(height_map, spos).rgb);
+
+		spos = vec2((gx)*reverse_terrain_size+0.5, (gy-delta_xy)*reverse_terrain_size+0.5);
+		h_xdx22 =  length(texture2D(height_map, spos).rgb);
+	}
+
+
 
 	vec3 newNormal = normalize(vec3(-(h_xdx11 - h_xdx12) / (2. / 25.),
 																-(h_xdx21 - h_xdx22) / (2. / 25.),

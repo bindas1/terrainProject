@@ -8,6 +8,7 @@ varying vec3 position_in_light_view; // vertex position in light coordinates
 varying vec3 v2f_dir_from_view_not_normalized;
 varying vec3 position_v3;
 
+uniform sampler2D water_height_map;
 uniform sampler2D height_map;
 uniform float sim_time;
 uniform mat4 mat_mvp;
@@ -45,12 +46,14 @@ void main()
 
         if(position_v4.z <= water_level) {
             // simulate little waves on water
-            vec2 uv = vec2(position_v4.x, position_v4.y);
+           /* vec2 uv = vec2(position_v4.x, position_v4.y);
             const float PI = 3.1415;
             float v = 5.*PI;
             float acc = 3.;
             float amplitude = .003;
-            position_v4.z = (sin((uv.x*v-time)*acc)+cos((uv.y*v-time)*acc))*amplitude*2. + water_level;
+            position_v4.z = (sin((uv.x*v-time)*acc)+cos((uv.y*v-time)*acc))*amplitude*2. + water_level;*/
+            float amplitude = 0.15;
+            position_v4.z = length(texture2D(water_height_map, scaled_positions).rgb)*amplitude + water_level - amplitude;
         }
     }
 
